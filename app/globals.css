@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+* { -webkit-tap-highlight-color: transparent; }
+
+.btn-blood { @apply bg-blood-600 hover:bg-blood-700 active:bg-blood-800 text-white font-semibold rounded-xl px-5 py-3 transition shadow-soft disabled:opacity-50 disabled:cursor-not-allowed; }
+.btn-outline { @apply border-2 border-blood-600 text-blood-700 hover:bg-blood-50 font-semibold rounded-xl px-5 py-3 transition; }
+.card { @apply bg-white rounded-2xl shadow-card border border-gray-100; }
+.input { @apply w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blood-500 focus:border-blood-500 bg-white; }
+.label { @apply block text-sm font-semibold text-gray-700 mb-1.5; }
+.badge { @apply inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full; }
+.skeleton { @apply animate-pulse bg-gray-200 rounded-xl; }
+.bottom-nav-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ---------- BloodLink motion system (হালকা, প্রফেশনাল) ---------- */
+@keyframes floaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-12px) } }
+@keyframes floaty-sm { 0%,100% { transform: translateY(0) rotate(-4deg) } 50% { transform: translateY(-8px) rotate(4deg) } }
+@keyframes pop-in { 0% { transform: scale(.6); opacity: 0 } 70% { transform: scale(1.06) } 100% { transform: scale(1); opacity: 1 } }
+@keyframes progress-slide { 0% { transform: translateX(-30%) } 100% { transform: translateX(25%) } }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(185,28,28,.45) } 70% { box-shadow: 0 0 0 12px rgba(185,28,28,0) } 100% { box-shadow: 0 0 0 0 rgba(185,28,28,0) } }
+@keyframes shimmer { 0% { background-position: -400px 0 } 100% { background-position: 400px 0 } }
+@keyframes toast-in { from { transform: translate(-50%, 12px); opacity: 0 } to { transform: translate(-50%, 0); opacity: 1 } }
+.animate-floaty { animation: floaty 5s ease-in-out infinite; }
+.animate-floaty-sm { animation: floaty-sm 6s ease-in-out infinite; }
+.animate-pop-in { animation: pop-in .35s ease-out both; }
+.animate-progress-slide { animation: progress-slide 1s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+.animate-toast-in { animation: toast-in .25s ease-out both; }
+.shimmer { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 800px 100%; animation: shimmer 1.4s linear infinite; }
+/* বাটনে চাপ-ফিডব্যাক: সব .btn-blood/.btn-outline-এ */
+.btn-blood, .btn-outline { transition: transform .12s ease, box-shadow .2s ease, background-color .2s ease; }
+.btn-blood:active, .btn-outline:active { transform: scale(.97); }
+.card-hover { transition: transform .2s ease, box-shadow .2s ease; }
+.card-hover:hover { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .animate-floaty, .animate-floaty-sm, .animate-pulse-ring, .animate-progress-slide, .shimmer { animation: none !important; }
+}

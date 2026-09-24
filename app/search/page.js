@@ -1,0 +1,60 @@
+'use client';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { store, ensureSeed } from '@/lib/store';
+import { BLOOD_GROUPS } from '@/lib/constants';
+import LocationSelector from '@/components/LocationSelector';
+import RequestCard from '@/components/RequestCard';
+import { Card, EmptyState, Skeleton } from '@/components/ui';
+
+function SearchBody() {
+  const sp = useSearchParams();
+  const [bg, setBg] = useState(sp.get('bg') || '');
+  const [loc, setLoc] = useState({ division: sp.get('div') || '', district: sp.get('dis') || '', upazila: sp.get('upa') || '' });
+  const [sort, setSort] = useState('urgent');
+  const [urg, setUrg] = useState('');
+  const [all, setAll] = useState(null);
+
+  useEffect(() => { ensureSeed(); const t = setTimeout(() => setAll(store.getRequests()), 400); return () => clearTimeout(t); }, []);
+
+  const list = useMemo(() => {
+    if (!all) return null;
+    let r = all.filter(x => x.status === 'ACTIVE');
+    if (bg) r = r.filter(x => x.blood_group === bg);
+    if (loc.division) r = r.filter(x => x.division_id === loc.division);
+    if (loc.district) r = r.filter(x => x.district_id === loc.district);
+    if (loc.upazila) r = r.filter(x => x.upazila_id === loc.upazila);
+    if (urg) r = r.filter(x => x.urgency === urg);
+    const rank = { critical: 0, urgent: 1, normal: 2 };
+    r = [...r].sort((a, b) => sort === 'recent' ? new Date(b.created_at) - new Date(a.created_at) : (rank[a.urgency] - rank[b.urgency]));
+    return r;
+  }, [all, bg, loc, sort, urg]);
+
+  return (
+    <div className="pt-4 space-y-4">
+      <h1 className="text-2xl font-extrabold">রক্ত খুঁজুন</h1>
+      <Card>
+        <p className="label">রক্তের গ্রুপ</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          <button onClick={() => setBg('')} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${!bg ? 'bg-gray-900 text-white' : 'bg-white'}`}>সবগুলো</button>
+          {BLOOD_GROUPS.map(g => <button key={g} onClick={() => setBg(bg === g ? '' : g)} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${bg === g ? 'bg-blood-600 text-white' : 'bg-white'}`}>{g}</button>)}
+        </div>
+        <LocationSelector {...loc} onChange={setLoc} />
+        <div className="grid grid-cols-2 gap-2 mt-1">
+          <label className="block"><span className="label">জরুরি অবস্থা</span>
+            <select className="input" value={urg} onChange={e => setUrg(e.target.value)}>
+              <option value="">সব</option><option value="normal">🟢 সাধারণ</option><option value="urgent">🟠 জরুরি</option><option value="critical">🔴 অত্যন্ত জরুরি</option>
+            </select></label>
+          <label className="block"><span className="label">সাজান</span>
+            <select className="input" value={sort} onChange={e => setSort(e.target.value)}>
+              <option value="urgent">জরুরি আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
+            </select></label>
+        </div>
+      </Card>
+      {!list ? <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map(i => <Skeleton key={i} />)}</div>
+      : list.length === 0 ? <EmptyState title="এখন কোনো সক্রিয় রক্তের অনুরোধ পাওয়া যায়নি।" hint="অন্য এলাকা বা রক্তের গ্রুপ দিয়ে আবার চেষ্টা করুন।" />
+      : <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{list.map(r => <RequestCard key={r.id} r={r} />)}</div>}
+    </div>
+  );
+}
+export default function SearchPage() { return <Suspense><SearchBody /></Suspense>; }

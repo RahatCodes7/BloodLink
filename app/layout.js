@@ -1,0 +1,28 @@
+import './globals.css';
+import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
+import Footer from '@/components/Footer';
+import ProgressBar from '@/components/ProgressBar';
+
+export const metadata = {
+  title: 'BloodLink — রক্ত খুঁজুন। জীবন বাঁচান।',
+  description: 'বাংলাদেশের জরুরি রক্তদান ও রক্ত অনুরোধ কমিউনিটি প্ল্যাটফর্ম। রক্ত খুঁজুন, রক্তদাতা হন, জীবন বাঁচান।',
+  manifest: '/manifest.webmanifest',
+  openGraph: { title: 'BloodLink — রক্ত খুঁজুন। জীবন বাঁচান।', description: 'জরুরি সময়ে রক্তদাতা খুঁজুন।', type: 'website', locale: 'bn_BD' }
+};
+export const viewport = { themeColor: '#b91c1c', width: 'device-width', initialScale: 1 };
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="bn">
+      <head><link rel="icon" href="/icon.svg" /></head>
+      <body>
+        <ProgressBar />
+        <Header />
+        <main className="max-w-6xl mx-auto px-4 pb-24 md:pb-8 min-h-[70vh]">{children}</main>
+        <div className="hidden md:block"><Footer /></div>
+        <BottomNav />
+      </body>
+    </html>
+  );
+}

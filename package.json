@@ -1,0 +1,32 @@
+{
+  "name": "bloodlink",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BloodLink — বাংলাদেশের রক্তদান ও জরুরি রক্ত অনুরোধ কমিউনিটি প্ল্যাটফর্ম",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "node lib/db/migrate.js",
+    "db:seed": "node lib/db/seed.js",
+    "db:expire": "node -e \"import('./services/bloodRequests.js').then(m=>m.expireDueRequests().then(r=>console.log('expired:',r)).catch(e=>{console.error(e.message);process.exit(1)}))\""
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.4.0",
+    "@supabase/supabase-js": "2.44.4",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "firebase": "^11.10.0",
+    "jsonwebtoken": "^9.0.2",
+    "next": "14.2.5",
+    "pg": "^8.12.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.41",
+    "tailwindcss": "3.4.10"
+  }
+}
