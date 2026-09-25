@@ -8,10 +8,11 @@ import { Card, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 function fmtWho(m, meId) {
+  if (m.sender_name && !(meId && m.sender_id === meId)) return m.sender_name;
   if (!meId) return m.from || 'তারা';
   if (m.sender_id && m.sender_id === meId) return 'আপনি';
   if (m.from) return m.from;
-  return 'তারা';
+  return m.sender_name || 'তারা';
 }
 
 function Msgs() {
@@ -100,15 +101,16 @@ function Msgs() {
           {convs.map(c => (
             <button key={c.id} role="tab" aria-selected={c.id === active}
               onClick={() => router.push('/dashboard/messages?to=' + c.id)}
-              className={cn('shrink-0 text-xs font-bold rounded-xl px-3 py-2 border transition',
+              className={cn('shrink-0 rounded-xl px-3 py-2 border transition text-left min-w-[130px]',
                 c.id === active ? 'bg-blood-600 text-white border-blood-600' : 'bg-white hover:border-blood-300')}>
-              💬 {(c.last_message || 'নতুন চ্যাট').slice(0, 18) || 'চ্যাট'}
-              {c.last_at && <span className="block text-[10px] opacity-70 font-normal">{timeAgo(c.last_at)}</span>}
+              <span className="block text-xs font-extrabold truncate">👤 {c.other_name || 'কথোপকথন'}</span>
+              <span className="block text-[11px] opacity-70 truncate font-normal">{(c.last_message || 'নতুন চ্যাট').slice(0, 24)}</span>
+              {c.last_at && <span className="block text-[10px] opacity-60 font-normal">{timeAgo(c.last_at)}</span>}
             </button>
           ))}
         </div>
       )}
-      <Card><p className="text-sm text-gray-500">💬 {activeConv ? (activeConv.last_message ? 'কথোপকথন চলছে' : 'নতুন কথোপকথন') : active ? 'সাধারণ কথোপকথন' : 'মেসেজ'}</p></Card>
+      <Card><p className="text-sm text-gray-500">💬 {activeConv ? (activeConv.other_name ? <><b className="text-gray-800">{activeConv.other_name}</b> এর সাথে কথা হচ্ছে</> : 'কথোপকথন চলছে') : active ? 'সাধারণ কথোপকথন' : 'মেসেজ'}</p></Card>
       <div className="space-y-2 min-h-[200px]" aria-live="polite">
         {msgs.length === 0 && <p className="text-sm text-gray-400 text-center py-6">এখনো কোনো মেসেজ নেই। নিচে লিখে শুরু করুন — অপর পক্ষ নোটিফিকেশন পাবেন।</p>}
         {msgs.map(m => {
