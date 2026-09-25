@@ -35,7 +35,11 @@ function SearchBody() {
     if (loc.upazila) r = r.filter(x => x.upazila_id === loc.upazila);
     if (urg) r = r.filter(x => x.urgency === urg);
     const rank = { critical: 0, urgent: 1, normal: 2 };
-    r = [...r].sort((a, b) => sort === 'recent' ? new Date(b.created_at) - new Date(a.created_at) : (rank[a.urgency] - rank[b.urgency]));
+    r = [...r].sort((a, b) => {
+      if (sort === 'recent') return new Date(b.created_at) - new Date(a.created_at);
+      if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+      return (rank[a.urgency] - rank[b.urgency]);
+    });
     return r;
   }, [all, bg, loc, sort, urg]);
 
@@ -60,7 +64,7 @@ function SearchBody() {
                 </select></label>
               <label className="block"><span className="label">সাজান</span>
                 <select className="input" value={sort} onChange={e => setSort(e.target.value)}>
-                  <option value="urgent">জরুরি আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
+                  <option value="urgent">জরুরি আগে</option><option value="oldest">পুরনো আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
                 </select></label>
             </div>
           </div>
@@ -74,7 +78,7 @@ function SearchBody() {
               </select></label>
             <label className="block"><span className="label">সাজান</span>
               <select className="input" value={sort} onChange={e => setSort(e.target.value)}>
-                <option value="urgent">জরুরি আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
+                <option value="urgent">জরুরি আগে</option><option value="oldest">পুরনো আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
               </select></label>
           </div>
         </div>
