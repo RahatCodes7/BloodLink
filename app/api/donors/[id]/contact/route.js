@@ -10,7 +10,7 @@ export async function GET(req, { params }) {
   try {
     const user = await getUser(req);
     if (!user) return fail(401, 'যোগাযোগ করতে লগইন করুন।');
-    const { query } = require('../../../../lib/db/client');
+    const { query } = require('../../../../../lib/db/client');
     const r = await query(
       `SELECT d.contact_preference, u.phone FROM donor_profiles d JOIN users u ON u.id=d.user_id WHERE d.id=$1`,
       [params.id]
