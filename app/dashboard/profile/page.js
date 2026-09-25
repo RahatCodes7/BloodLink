@@ -89,10 +89,44 @@ export default function Profile() {
     say('✓ ফোন নম্বর যাচাই হয়েছে!');
   }
   const set = k => e => setF({ ...f, [k]: e.target.value });
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailOtpOpen, setEmailOtpOpen] = useState(false);
+  const [emailCode, setEmailCode] = useState('');
+  const [emailBusy, setEmailBusy] = useState(false);
+
+  async function sendEmailCode() {
+    if (!/.+@.+\..+/.test(f.email)) return say('আগে সঠিক ইমেইল দিন ও সেভ করুন।');
+    setEmailBusy(true);
+    try {
+      const r = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: f.email, purpose: 'verify' }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'পাঠানো যায়নি');
+      setEmailOtpOpen(true); setEmailCode('');
+      say('✓ ইমেইলে কোড পাঠানো হয়েছে।');
+    } catch (e) { say(e.message); }
+    setEmailBusy(false);
+  }
+  async function confirmEmailCode() {
+    setEmailBusy(true);
+    try {
+      const r = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: emailCode }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'যাচাই হয়নি');
+      setEmailOtpOpen(false); setEmailVerified(true);
+      say('✓ ইমেইল যাচাই হয়েছে!');
+    } catch (e) { say(e.message); }
+    setEmailBusy(false);
+  }
   return (
     <DashShell title="প্রোফাইল">
       <Card><form onSubmit={save}>
         <Input label="নাম" value={f.name} onChange={set('name')} /><Input label="ইমেইল" value={f.email} onChange={set('email')} />
+        <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5 mb-3">
+          <p className={`text-sm font-bold ${emailVerified ? 'text-green-700' : 'text-orange-600'}`}>
+            ইমেইল যাচাই: {emailVerified ? '✓ যাচাইকৃত' : '○ যাচাই হয়নি'}
+          </p>
+          {!emailVerified && <button type="button" disabled={emailBusy} onClick={sendEmailCode} className="text-xs font-bold text-blood-700 underline disabled:text-gray-400 disabled:no-underline">{emailBusy ? 'পাঠানো হচ্ছে...' : 'কোড পাঠান'}</button>}
+        </div>
         <Input label="ফোন" value={f.phone} onChange={set('phone')} />
         <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5 mb-3">
           <p className={`text-sm font-bold ${verified ? 'text-green-700' : 'text-orange-600'}`}>
@@ -113,6 +147,11 @@ export default function Profile() {
         {viaFirebase && <p className="text-xs bg-green-50 border border-green-200 rounded-xl p-2.5 mb-2">📲 {f.phone} নম্বরে Firebase থেকে আসল SMS গেছে।</p>}
         <Input label="যাচাই কোড" value={code} onChange={e => setCode(e.target.value)} placeholder="------" inputMode="numeric" maxLength={6} />
         <Button loading={verifying || sending} onClick={confirmCode}>{verifying ? 'যাচাই হচ্ছে...' : 'যাচাই করুন'}</Button>
+      </Modal>
+      <Modal open={emailOtpOpen} onClose={() => setEmailOtpOpen(false)} title="ইমেইল যাচাই">
+        <p className="text-sm text-gray-500 mb-1">{f.email} ঠিকানায় ৬ সংখ্যার কোড পাঠানো হয়েছে।</p>
+        <Input label="যাচাই কোড" value={emailCode} onChange={e => setEmailCode(e.target.value)} placeholder="------" inputMode="numeric" maxLength={6} />
+        <Button loading={emailBusy} onClick={confirmEmailCode}>যাচাই করুন</Button>
       </Modal>
       <div id="recaptcha-container" />
       <Toast msg={toast} />
