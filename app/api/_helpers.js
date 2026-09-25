@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createRequire } from 'module';
 
 export const runtime = 'nodejs';
 
@@ -14,7 +15,6 @@ export function fail(status, message) {
  * Production-এ x-user-id header কখনো বিশ্বাস করা হয় না (NODE_ENV=production-এ fallback বন্ধ)।
  */
 export async function getUser(req) {
-  const { createRequire } = await import('module');
   const require = createRequire(import.meta.url);
   const { verifyToken, COOKIE } = require('../../services/auth');
 
