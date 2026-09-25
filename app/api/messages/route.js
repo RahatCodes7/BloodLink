@@ -35,6 +35,23 @@ export async function POST(req) {
     if (!text) return fail(400, 'খালি মেসেজ পাঠানো যাবে না।');
     if (!(await messaging.isMember(body.conversationId, user.id))) return fail(403, 'অনুমতি নেই।');
     const row = await messaging.sendMessage(body.conversationId, user.id, text);
+    // প্রাপকদের জানান (in-app + ফোনে push):
+    try {
+      const others = (await messaging.members(body.conversationId)).filter(id => id !== user.id);
+      const { notifications } = require('../../../lib/db/repositories/index');
+      const { pushToUsers } = require('../../../services/push');
+      for (const oid of others) {
+        await notifications.create({
+          userId: oid, type: 'DONOR_RESPONSE', title: '💬 নতুন মেসেজ',
+          message: `${user.name || 'কেউ'}: ${text.slice(0, 80)}`, relatedRequestId: null
+        }).catch(() => {});
+      }
+      pushToUsers(others, {
+        title: '💬 BloodLink-এ নতুন মেসেজ',
+        message: `${user.name || 'কেউ'}: ${text.slice(0, 80)}`,
+        url: `/dashboard/messages?to=${body.conversationId}`
+      }).catch(() => {});
+    } catch {}
     return NextResponse.json({ ok: true, data: { id: row.id } }, { status: 201 });
   } catch (e) {
     return fail(500, 'দুঃখিত, অনুরোধটি সম্পন্ন করা যায়নি।');

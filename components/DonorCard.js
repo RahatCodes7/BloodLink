@@ -1,9 +1,30 @@
 'use client';
-import { Card, Badge, Avatar } from './ui';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, Badge, Avatar, Toast } from './ui';
 import { disName } from '@/lib/locations';
 import { telLink } from '@/lib/utils';
-import Icon from './icons';
+import Icon, { Spinner } from './icons';
+
 export default function DonorCard({ d }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function startChat() {
+    if (!d.user_id) { router.push('/dashboard/messages'); return; }
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch('/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ withUserId: d.user_id }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'চ্যাট খোলা যায়নি');
+      router.push('/dashboard/messages?to=' + j.data.id);
+    } catch (e) {
+      if (String(e.message).includes('Failed to fetch')) router.push('/dashboard/messages');
+      else { setErr(e.message); setTimeout(() => setErr(''), 2000); setBusy(false); }
+    }
+  }
+
   return (
     <Card className="card-hover">
       <div className="flex items-center gap-3">
@@ -18,7 +39,8 @@ export default function DonorCard({ d }) {
       <p className="text-sm text-gray-600 mt-1">রক্তদান: {d.donations || 0} বার</p>
       {d.phone
         ? <a className="btn-blood w-full text-center mt-3 !py-2.5 inline-flex items-center justify-center gap-2" href={telLink(d.phone)}><Icon name="phone" className="w-4 h-4" />যোগাযোগ করুন</a>
-        : <a className="btn-blood w-full text-center mt-3 !py-2.5 inline-flex items-center justify-center gap-2" href="/dashboard/messages"><Icon name="chat" className="w-4 h-4" />মেসেজ করুন</a>}
+        : <button disabled={busy} onClick={startChat} className="btn-blood w-full mt-3 !py-2.5 inline-flex items-center justify-center gap-2">{busy ? <Spinner className="w-4 h-4" /> : <Icon name="chat" className="w-4 h-4" />}{busy ? 'খুলছে...' : 'মেসেজ করুন'}</button>}
+      <Toast msg={err} />
     </Card>
   );
 }

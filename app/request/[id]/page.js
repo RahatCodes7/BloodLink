@@ -30,6 +30,20 @@ export default function RequestDetails() {
   }, [id]);
 
   function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }
+  const [chatBusy, setChatBusy] = useState(false);
+  async function startChat() {
+    if (!store.getUser()) { say('মেসেজ করতে লগইন করুন।'); return; }
+    setChatBusy(true);
+    try {
+      const res = await fetch('/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId: r.id }) });
+      const j = await res.json();
+      if (!j.ok) throw new Error(j.error || 'চ্যাট খোলা যায়নি');
+      window.location.href = '/dashboard/messages?to=' + j.data.id;
+    } catch (e) {
+      if (String(e.message).includes('Failed to fetch')) window.location.href = `/dashboard/messages?to=${r.id}`;
+      else { say(e.message); setChatBusy(false); }
+    }
+  }
   if (r === null) return <div className="pt-6"><EmptyState title="অনুরোধটি পাওয়া যায়নি।" hint="লিংকটি ঠিক আছে কি না দেখুন।" /></div>;
   if (!r) return <div className="pt-6">প্রোফাইল লোড হচ্ছে...</div>;
 
@@ -57,7 +71,7 @@ export default function RequestDetails() {
         <a className="btn-blood text-center" href={telLink(showPhone)}>📞 কল করুন</a>
         {r.whatsapp_enabled
           ? <a className="btn-blood text-center !bg-green-600 hover:!bg-green-700" target="_blank" rel="noreferrer" href={waLink(showPhone, `আসসালামু আলাইকুম, ${r.blood_group} রক্তের অনুরোধ (${r.id}) দেখে যোগাযোগ করছি।`)}>💬 WhatsApp</a>
-          : <a className="btn-outline text-center" href={`/dashboard/messages?to=${r.id}`}>💬 মেসেজ</a>}
+          : <button disabled={chatBusy} onClick={startChat} className="btn-outline text-center">{chatBusy ? 'খুলছে...' : '💬 মেসেজ'}</button>}
       </div>
 
       <div className="grid grid-cols-3 gap-2">

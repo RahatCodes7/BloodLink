@@ -53,4 +53,22 @@ async function removeSubscription(endpoint) {
   return r.rowCount > 0;
 }
 
-module.exports = { configured, broadcast, saveSubscription, removeSubscription };
+/** নির্দিষ্ট ইউজারদের push (1:1 নোটিফিকেশন, যেমন নতুন মেসেজ)। */
+async function pushToUsers(userIds, { title, body, url }) {
+  if (!configured() || !userIds.length) return { sent: 0 };
+  setup();
+  const payload = JSON.stringify({ title, body, url: url || '/' });
+  let sent = 0;
+  const r = await query('SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ANY($1)', [userIds]);
+  await Promise.all(r.rows.map(async (s) => {
+    try {
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 3600 });
+      sent++;
+    } catch (e) {
+      if (e.statusCode === 404 || e.statusCode === 410) await query('DELETE FROM push_subscriptions WHERE id=$1', [s.id]).catch(() => {});
+    }
+  }));
+  return { sent };
+}
+
+module.exports = { configured, broadcast, pushToUsers, saveSubscription, removeSubscription };
