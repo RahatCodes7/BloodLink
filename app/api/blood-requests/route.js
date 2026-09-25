@@ -7,10 +7,16 @@ const require = createRequire(import.meta.url);
 const repo = require('../../../lib/db/repositories/bloodRequests');
 const { createRequest } = require('../../../services/bloodRequests');
 
-// GET /api/blood-requests?bloodGroup=O%2B&districtId=khulna-d&cursor=...&limit=20
+// GET /api/blood-requests?... — public feed; ?mine=1 → নিজের সব (login)
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
+    if (searchParams.get('mine') === '1') {
+      const user = await getUser(req);
+      if (!user) return fail(401, 'লগইন করুন।');
+      const rows = await repo.listByRequester(user.id);
+      return ok(rows.map(r => ({ ...r, urgency: String(r.urgency || '').toLowerCase() })));
+    }
     const data = await repo.listActive({
       bloodGroup: searchParams.get('bloodGroup') || undefined,
       divisionId: searchParams.get('divisionId') || undefined,
