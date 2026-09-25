@@ -19,6 +19,7 @@ const items = [
 const hubLinks = [
   ['/dashboard', 'user', 'ড্যাশবোর্ড'],
   ['/dashboard/requests', 'drop', 'আমার অনুরোধ'],
+  ['/requests', 'clip', 'সকল আবেদন'],
   ['/dashboard/donor-profile', 'heart', 'রক্তদাতা প্রোফাইল'],
   ['/dashboard/saved', 'bookmark', 'সংরক্ষিত'],
   ['/dashboard/notifications', 'bell', 'নোটিফিকেশন'],

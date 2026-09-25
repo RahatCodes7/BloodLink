@@ -111,7 +111,8 @@ export default function Home() {
         </div>
         {!feed ? (<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map(i => <Skeleton key={i} />)}</div>)
         : feed.length === 0 ? (<EmptyState title="এখন কোনো সক্রিয় রক্তের অনুরোধ পাওয়া যায়নি।" hint="অন্য এলাকা বা রক্তের গ্রুপ দিয়ে আবার চেষ্টা করুন।" />)
-        : (<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{feed.map(r => <RequestCard key={r.id} r={r} />)}</div>)}
+        : (<><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{feed.map(r => <RequestCard key={r.id} r={r} />)}</div>
+          <Link href="/requests" className="btn-outline w-full text-center mt-3 !py-2.5 block">📋 সকল আবেদন দেখুন (পুরনো আগে)</Link></>)}
       </section>
 
       {/* CAMPAIGNS PREVIEW */}
