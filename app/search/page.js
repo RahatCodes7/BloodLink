@@ -2,10 +2,11 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { store, ensureSeed } from '@/lib/store';
-import { fetchRequests } from '@/lib/api';
+import { fetchRequests, fetchDonors } from '@/lib/api';
 import { BLOOD_GROUPS } from '@/lib/constants';
 import LocationSelector from '@/components/LocationSelector';
 import RequestCard from '@/components/RequestCard';
+import DonorCard from '@/components/DonorCard';
 import { Card, EmptyState, Skeleton } from '@/components/ui';
 
 function SearchBody() {
@@ -15,6 +16,8 @@ function SearchBody() {
   const [sort, setSort] = useState('urgent');
   const [urg, setUrg] = useState('');
   const [all, setAll] = useState(null);
+  const [mode, setMode] = useState('requests'); // requests | donors
+  const [donors, setDonors] = useState(null);
 
   useEffect(() => {
     ensureSeed();
@@ -22,6 +25,8 @@ function SearchBody() {
     (async () => {
       try { const rows = await fetchRequests(); if (live) setAll(rows); }
       catch { if (live) setAll(store.getRequests()); }
+      try { const ds = await fetchDonors({ availableOnly: false }); if (live) setDonors(ds); }
+      catch { if (live) setDonors(store.getDonors()); }
     })();
     return () => { live = false; };
   }, []);
@@ -46,6 +51,17 @@ function SearchBody() {
   return (
     <div className="pt-4 space-y-4">
       <h1 className="text-2xl font-extrabold">রক্ত খুঁজুন</h1>
+      {/* ট্যাব: অনুরোধ + রক্তদাতা — এক জায়গায় দুটো খোঁজ */}
+      <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-2xl p-1" role="tablist" aria-label="খোঁজের ধরন">
+        <button role="tab" aria-selected={mode === 'requests'} onClick={() => setMode('requests')}
+          className={`rounded-xl py-2.5 text-sm font-extrabold transition ${mode === 'requests' ? 'bg-white shadow text-blood-700' : 'text-gray-500'}`}>
+          🩸 রক্তের অনুরোধ
+        </button>
+        <button role="tab" aria-selected={mode === 'donors'} onClick={() => setMode('donors')}
+          className={`rounded-xl py-2.5 text-sm font-extrabold transition ${mode === 'donors' ? 'bg-white shadow text-blood-700' : 'text-gray-500'}`}>
+          ❤️ রক্তদাতা
+        </button>
+      </div>
       {/* মোবাইলে: গ্রুপ সবসময়, বাকি ফিল্টার collapsible — ফলাফল দ্রুত দেখা যায় */}
       <Card>
         <p className="label">রক্তের গ্রুপ</p>
@@ -83,10 +99,31 @@ function SearchBody() {
           </div>
         </div>
       </Card>
-      {!list ? <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map(i => <Skeleton key={i} />)}</div>
-      : list.length === 0 ? <EmptyState title="এখন কোনো সক্রিয় রক্তের অনুরোধ পাওয়া যায়নি।" hint="অন্য এলাকা বা রক্তের গ্রুপ দিয়ে আবার চেষ্টা করুন।" />
-      : <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{list.map(r => <RequestCard key={r.id} r={r} />)}</div>}
+      {mode === 'requests' ? (<>
+        {!list ? <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map(i => <Skeleton key={i} />)}</div>
+        : list.length === 0 ? <EmptyState title="এখন কোনো সক্রিয় রক্তের অনুরোধ পাওয়া যায়নি।" hint="অন্য এলাকা বা রক্তের গ্রুপ দিয়ে আবার চেষ্টা করুন।" />
+        : <><p className="text-sm font-bold text-gray-600">🩸 <span className="text-blood-700">{list.length.toLocaleString('bn-BD')}টি</span> অনুরোধ পাওয়া গেছে</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{list.map(r => <RequestCard key={r.id} r={r} />)}</div></>}
+      </>) : (
+        <DonorResults donors={donors} bg={bg} loc={loc} />
+      )}
     </div>
   );
+}
+
+function DonorResults({ donors, bg, loc }) {
+  if (!donors) return <div className="grid sm:grid-cols-2 gap-3">{[1, 2].map(i => <Skeleton key={i} />)}</div>;
+  const list = donors
+    .filter(d => (!bg || d.blood_group === bg) && (!loc.district || d.district_id === loc.district) && (!loc.upazila || (d.upazila_id || '') === loc.upazila))
+    .sort((a, b) => Number(b.available || false) - Number(a.available || false));
+  if (!list.length) {
+    return donors.length === 0
+      ? <EmptyState title="এখনো কোনো রক্তদাতা নিবন্ধন করেননি।" hint="ডোনার যোগ দিলে এখানে দেখা যাবে।" icon="donor-hands.png" />
+      : <EmptyState title="এই ফিল্টারে কোনো রক্তদাতা নেই।" hint="অন্য গ্রুপ বা এলাকা দিয়ে চেষ্টা করুন।" icon="donor-hands.png" />;
+  }
+  return (<>
+    <p className="text-sm font-bold text-gray-600">❤️ <span className="text-blood-700">{list.length.toLocaleString('bn-BD')} জন</span> রক্তদাতা পাওয়া গেছে</p>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{list.map(d => <DonorCard key={d.id} d={d} />)}</div>
+  </>);
 }
 export default function SearchPage() { return <Suspense><SearchBody /></Suspense>; }
