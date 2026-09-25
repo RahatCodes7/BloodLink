@@ -6,6 +6,7 @@ import { store, ensureSeed } from '@/lib/store';
 import { timeAgo } from '@/lib/utils';
 import { Avatar } from './ui';
 import Icon from './icons';
+import { AppInstallButton } from './InstallPrompt';
 
 const menuItems = [
   ['/dashboard', 'user', 'ড্যাশবোর্ড'],
@@ -65,7 +66,8 @@ export default function Header() {
           <Link href="/campaigns" className="hover:text-blood-700 transition">ক্যাম্পেইন</Link>
           <Link href="/about" className="hover:text-blood-700 transition">আমাদের সম্পর্কে</Link>
         </nav>
-        <div className="flex items-center gap-2" ref={wrapRef}>
+        <div className="flex items-center gap-1.5 sm:gap-2" ref={wrapRef}>
+          <AppInstallButton />
           {/* 🔔 নোটিফিকেশন ড্রপডাউন */}
           <div className="relative">
             <button onClick={openBell} className="relative p-2 rounded-xl hover:bg-red-50 text-gray-700 hover:text-blood-700 transition" aria-label="নোটিফিকেশন" aria-expanded={openMenu === 'bell'}>

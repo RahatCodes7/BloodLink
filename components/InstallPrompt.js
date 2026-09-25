@@ -7,8 +7,8 @@ function isInstalled() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-// সাইডে সবসময় থাকা "অ্যাপ" বাটন — prompt না এলেও ইনস্টল করা যায়; ইনস্টলের পর গায়েব
-export function InstallButton() {
+// হেডারের লাল "App" বাটন (শুধু মোবাইল) — ইনস্টলের পর auto-gayeb
+export function AppInstallButton() {
   const [deferred, setDeferred] = useState(null);
   const [gone, setGone] = useState(true);
   const [help, setHelp] = useState(false);
@@ -48,9 +48,8 @@ export function InstallButton() {
   return (
     <>
       <button onClick={go} aria-label="অ্যাপ ইনস্টল করুন"
-        className="fixed bottom-20 md:bottom-6 left-4 z-40 flex items-center gap-2 bg-gray-900 text-white font-bold text-sm pl-3 pr-4 py-2.5 rounded-full shadow-soft hover:scale-105 active:scale-95 transition">
-        <Icon name="plus" className="w-5 h-5" />
-        <span className="hidden sm:inline">অ্যাপ নিন</span>
+        className="md:hidden bg-blood-600 hover:bg-blood-700 active:scale-95 transition text-white text-xs font-extrabold px-3 py-2 rounded-xl shadow-soft">
+        📲 App
       </button>
       {help && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={() => setHelp(false)}>
