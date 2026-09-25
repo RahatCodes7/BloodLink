@@ -11,7 +11,11 @@ function mailer() {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
   if (!user || !pass) { const e = new Error('Email সার্ভার কনফিগার হয়নি (GMAIL_USER / GMAIL_APP_PASSWORD)।'); e.status = 500; throw e; }
-  return nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+  // timeout: আটকে না থেকে দ্রুত error দেবে
+  return nodemailer.createTransport({
+    service: 'gmail', auth: { user, pass },
+    connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000
+  });
 }
 
 function hash(code, email) {
@@ -19,6 +23,19 @@ function hash(code, email) {
 }
 
 async function sendMail(to, subject, html) {
+  // Brevo HTTP API (port 443 — cloud-এ block হয় না) থাকলে সেটাই:
+  if (process.env.BREVO_API_KEY) {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+      body: JSON.stringify({
+        sender: { email: process.env.BREVO_SENDER || process.env.GMAIL_USER, name: 'BloodLink' },
+        to: [{ email: to }], subject, htmlContent: html
+      })
+    });
+    if (!r.ok) { const e = new Error('ইমেইল পাঠানো যায়নি।'); e.status = 502; throw e; }
+    return;
+  }
   const from = process.env.MAIL_FROM || process.env.GMAIL_USER;
   await mailer().sendMail({ from: `"BloodLink" <${from}>`, to, subject, html });
 }
