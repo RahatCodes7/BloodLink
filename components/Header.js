@@ -92,9 +92,9 @@ export default function Header() {
               </div>
             )}
           </div>
-          {/* 👤 প্রোফাইল ড্রপডাউন */}
+          {/* 👤 প্রোফাইল ড্রপডাউন (ডেস্কটপ — মোবাইলে নিচের "আমি" থেকে) */}
           {user ? (
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}
                 className="flex items-center gap-1.5 bg-gray-100 hover:bg-red-50 rounded-xl pl-1 pr-2 py-1 transition" aria-expanded={openMenu === 'profile'}>
                 <Avatar name={user.name} />
