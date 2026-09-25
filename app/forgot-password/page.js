@@ -29,13 +29,18 @@ export default function ForgotPassword() {
     e.preventDefault();
     if (cool > 0) return;
     setBusy(true);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 30000); // ৩০s-এ উত্তর না এলে থামবে
     try {
-      const r = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, purpose: 'reset' }) });
+      const r = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, purpose: 'reset' }), signal: ctrl.signal });
       const j = await r.json();
       if (!j.ok) throw new Error(j.error || 'পাঠানো যায়নি');
       setSent(true); setCool(60);
       say('✓ ইমেইলে ৬ সংখ্যার কোড পাঠানো হয়েছে।');
-    } catch (err) { say(err.message); }
+    } catch (err) {
+      say(err.name === 'AbortError' ? 'সার্ভার জবাব দিচ্ছে না। ১ মিনিট পর আবার দিন।' : err.message);
+    }
+    clearTimeout(timer);
     setBusy(false);
   }
 

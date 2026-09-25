@@ -13,13 +13,11 @@
     "db:expire": "node -e \"import('./services/bloodRequests.js').then(m=>m.expireDueRequests().then(r=>console.log('expired:',r)).catch(e=>{console.error(e.message);process.exit(1)}))\""
   },
   "dependencies": {
-    "@supabase/ssr": "0.4.0",
-    "@supabase/supabase-js": "2.44.4",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
     "firebase": "^11.10.0",
     "jsonwebtoken": "^9.0.2",
-    "next": "14.2.5",
+    "next": "14.2.35",
     "nodemailer": "^6.10.1",
     "pg": "^8.12.0",
     "react": "18.3.1",
