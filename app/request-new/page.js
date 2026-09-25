@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { store, ensureSeed } from '@/lib/store';
-import { HOSPITALS } from '@/lib/locations';
+import { hospitalsByDistrict, hospName } from '@/lib/locations';
 import { isValidBDPhone } from '@/lib/utils';
 import BloodGroupSelector from '@/components/BloodGroupSelector';
 import LocationSelector from '@/components/LocationSelector';
@@ -31,7 +31,7 @@ export default function NewRequest() {
     if (!f.agree) return say('অনুগ্রহ করে নিশ্চিত করুন যে তথ্য সত্য।');
     setPublishing(true);
     const id = Math.random().toString(36).slice(2, 7).toUpperCase();
-    const hosp = HOSPITALS.find(h => h.id === f.hospital)?.name || f.customPlace || 'অন্যান্য স্থান';
+    const hosp = hospName(f.hospital) || f.customPlace || 'অন্যান্য স্থান';
     const r = { id, blood_group: f.blood, bags_required: f.bags, bags_fulfilled: 0, urgency: f.urgency, division_id: f.division, district_id: f.district, upazila_id: f.upazila, hospital: hosp, location_text: hosp, required_date: f.date, required_time: f.time, description: f.desc.slice(0, 500), contact_phone: f.phone, whatsapp_enabled: f.wa, status: 'ACTIVE', verified_requester: true, created_at: new Date().toISOString() };
     store.addRequest(r);
     store.pushNotif({ title: '✓ অনুরোধ প্রকাশ হয়েছে', message: `${r.blood_group} • ${r.bags_required} ব্যাগ • ${hosp}`, ref: r.id });
@@ -56,9 +56,13 @@ export default function NewRequest() {
         {step === 2 && (<><p className="label">জরুরি অবস্থা</p>{[['normal', '🟢 সাধারণ'], ['urgent', '🟠 জরুরি'], ['critical', '🔴 অত্যন্ত জরুরি']].map(([v, l]) => (
           <label key={v} className={cn('flex items-center gap-2 border-2 rounded-xl px-4 py-3 mb-2 cursor-pointer', f.urgency === v ? 'border-blood-600 bg-blood-50' : '')}>
             <input type="radio" name="urg" checked={f.urgency === v} onChange={() => setF({ ...f, urgency: v })} /><span className="font-bold">{l}</span></label>))}</>)}
-        {step === 3 && (<><LocationSelector division={f.division} district={f.district} upazila={f.upazila} onChange={o => setF({ ...f, ...o })} />
-          <label className="label mt-2">হাসপাতাল / স্থান</label>
-          <select className="input mb-2" value={f.hospital} onChange={e => setF({ ...f, hospital: e.target.value })}><option value="">নির্বাচন করুন</option>{HOSPITALS.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}<option value="other">অন্যান্য স্থান</option></select>
+        {step === 3 && (<><LocationSelector division={f.division} district={f.district} upazila={f.upazila} onChange={o => setF({ ...f, ...o, hospital: '' })} />
+          <label className="label mt-2">হাসপাতাল / স্থান {f.district ? `(${hospitalsByDistrict(f.district).length}টি)` : ''}</label>
+          <select className="input mb-2" value={f.hospital} onChange={e => setF({ ...f, hospital: e.target.value })}>
+            <option value="">{f.district ? 'হাসপাতাল বেছে নিন' : 'আগে জেলা নির্বাচন করুন'}</option>
+            {hospitalsByDistrict(f.district).map(h => <option key={h.id} value={h.id}>{h.name_bn}{h.verified ? ' ✓' : ''}</option>)}
+            <option value="other">অন্যান্য স্থান</option>
+          </select>
           {(f.hospital === 'other' || !f.hospital) && <Input label="স্থানের নাম লিখুন" value={f.customPlace} onChange={e => setF({ ...f, customPlace: e.target.value })} placeholder="যেমন: উপজেলা স্বাস্থ্য কমপ্লেক্স" />}</>)}
         {step === 4 && (<><div className="grid grid-cols-2 gap-2"><Input label="তারিখ" type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} /><Input label="সময়" value={f.time} onChange={e => setF({ ...f, time: e.target.value })} placeholder="যেমন: সকাল ১০টা" /></div></>)}
         {step === 5 && (<><Input label="ফোন নম্বর" value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} placeholder="01XXXXXXXXX" inputMode="numeric" />

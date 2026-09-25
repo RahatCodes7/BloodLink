@@ -4,7 +4,8 @@ import { store, ensureSeed } from '@/lib/store';
 import { BLOOD_GROUPS } from '@/lib/constants';
 import { isValidBDPhone } from '@/lib/utils';
 import { requestOtp, verifyOtp, isPhoneVerified } from '@/lib/otp';
-import { isFirebaseConfigured, toE164BD, sendFirebaseOtp, resetVerifier, firebaseErrorBn } from '@/lib/firebase';
+const isFbOn = () => Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+const fbMod = () => import('@/lib/firebase'); // Firebase SDK শুধু দরকারে লোড (bundle হালকা)
 import { DashShell } from '../page';
 import { Card, Input, Select, Toast, Modal, Button } from '@/components/ui';
 
@@ -48,12 +49,14 @@ export default function Profile() {
     if (!isValidBDPhone(f.phone)) return say('আগে সঠিক ফোন নম্বর দিন।');
     setSending(true);
     // Firebase থাকলে আসল SMS, না থাকলে ডেমো:
-    if (isFirebaseConfigured()) {
+    if (isFbOn()) {
       try {
+        const { toE164BD, sendFirebaseOtp } = await fbMod();
         const conf = await sendFirebaseOtp(toE164BD(f.phone.trim()));
         setConfirmation(conf); setViaFirebase(true); setDemoCode('');
         setSending(false); setCooldown(60); setOtpOpen(true); setCode('');
       } catch (e) {
+        const { resetVerifier, firebaseErrorBn } = await fbMod();
         resetVerifier();
         setSending(false);
         say(firebaseErrorBn(e.code));
@@ -74,6 +77,7 @@ export default function Profile() {
         setOtpOpen(false); setVerified(true); setVerifying(false);
         say('✓ ফোন নম্বর যাচাই হয়েছে!');
       } catch (e) {
+        const { firebaseErrorBn } = await fbMod();
         setVerifying(false);
         say(firebaseErrorBn(e.code));
       }

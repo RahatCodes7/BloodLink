@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import ProgressBar from '@/components/ProgressBar';
+import SupportButton from '@/components/SupportButton';
 
 export const metadata = {
   title: 'BloodLink — রক্ত খুঁজুন। জীবন বাঁচান।',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
         <main className="max-w-6xl mx-auto px-4 pb-24 md:pb-8 min-h-[70vh]">{children}</main>
         <div className="hidden md:block"><Footer /></div>
         <BottomNav />
+        <SupportButton />
       </body>
     </html>
   );

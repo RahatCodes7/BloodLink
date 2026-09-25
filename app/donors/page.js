@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { store, ensureSeed } from '@/lib/store';
 import { BLOOD_GROUPS } from '@/lib/constants';
@@ -16,6 +17,10 @@ export default function Donors() {
   return (
     <div className="pt-4 space-y-4">
       <h1 className="text-2xl font-extrabold">রক্তদাতা খুঁজুন</h1>
+      <Link href="/compatibility" className="block bg-gradient-to-r from-red-50 to-amber-50 border border-red-100 rounded-2xl p-3.5 card-hover">
+        <p className="font-bold text-sm">🩸 কে কাকে রক্ত দিতে পারে?</p>
+        <p className="text-xs text-gray-500">সামঞ্জস্য চার্ট দেখুন → (শিক্ষামূলক)</p>
+      </Link>
       <Card>
         <p className="label">রক্তের গ্রুপ</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
