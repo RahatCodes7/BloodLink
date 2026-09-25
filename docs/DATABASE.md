@@ -77,7 +77,14 @@ pg_dump "$DATABASE_URL" --data-only --exclude-table=schema_migrations -f backup_
 # Restore: নতুন DB-তে migrate চালিয়ে তারপর data load (migrate-ই schema-এর source of truth)।
 ```
 
-## 11. Provider Migration (CockroachDB → Postgres/Supabase/Neon)
+## 12. প্রথম অ্যাডমিন বানানো
+`/admin` শুধু MODERATOR/ADMIN/SUPER_ADMIN role দেখে। নিজেকে অ্যাডমিন করুন (Cockroach console/SQL):
+```sql
+UPDATE users SET role='ADMIN' WHERE email='you@example.com';
+```
+Roles: `USER` → `DONOR` (auto, ডোনার হলে) → `MODERATOR` (রিপোর্ট/অনুরোধ) → `ADMIN` → `SUPER_ADMIN`।
+
+## 12. Provider Migration (CockroachDB → Postgres/Supabase/Neon)
 1. নতুন provider-এ খালি DB + `DATABASE_URL` বদলান।
 2. `npm run db:migrate` (সব migration standard SQL — Cockroach-specific syntax নেই)।
 3. পুরনো DB থেকে `pg_dump --data-only` → নতুন DB-তে load।

@@ -1,97 +1,39 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { store, ensureSeed } from '@/lib/store';
-import { fetchRequest } from '@/lib/api';
-import { URGENCY_LABEL, STATUS_LABEL, REPORT_REASONS } from '@/lib/constants';
-import { divName, disName, upaName } from '@/lib/locations';
-import { telLink, waLink, shareMessage } from '@/lib/utils';
-import { Card, Badge, Modal, Input, Textarea, Toast, EmptyState } from '@/components/ui';
-import { urgencyTone } from '@/components/RequestCard';
+import { headers } from 'next/headers';
+import RequestView from './RequestView';
 
-export default function RequestDetails() {
-  const { id } = useParams();
-  const [r, setR] = useState(null);
-  const [saved, setSaved] = useState(false);
-  const [toast, setToast] = useState('');
-  const [reportOpen, setReportOpen] = useState(false);
-  const [reason, setReason] = useState(REPORT_REASONS[0]);
-  const [desc, setDesc] = useState('');
+async function getReq(id) {
+  try {
+    const h = headers();
+    const proto = h.get('x-forwarded-proto') || 'https';
+    const host = h.get('x-forwarded-host') || h.get('host');
+    const base = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : '');
+    if (!base) return null;
+    const r = await fetch(`${base}/api/blood-requests/${id}`, { next: { revalidate: 60 } });
+    const j = await r.json();
+    return j.ok ? j.data : null;
+  } catch { return null; }
+}
 
-  useEffect(() => {
-    ensureSeed();
-    let live = true;
-    (async () => {
-      try { const row = await fetchRequest(id); if (live) setR(row); }
-      catch { if (live) setR(store.getRequest(id) || null); }
-    })();
-    setSaved(store.getSaved().includes(id));
-    return () => { live = false; };
-  }, [id]);
+function urgBn(u) {
+  return u === 'CRITICAL' ? 'অত্যন্ত জরুরি' : u === 'URGENT' ? 'জরুরি' : 'সাধারণ';
+}
 
-  function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }
-  const [chatBusy, setChatBusy] = useState(false);
-  async function startChat() {
-    if (!store.getUser()) { say('মেসেজ করতে লগইন করুন।'); return; }
-    setChatBusy(true);
-    try {
-      const res = await fetch('/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId: r.id }) });
-      const j = await res.json();
-      if (!j.ok) throw new Error(j.error || 'চ্যাট খোলা যায়নি');
-      window.location.href = '/dashboard/messages?to=' + j.data.id;
-    } catch (e) {
-      if (String(e.message).includes('Failed to fetch')) window.location.href = `/dashboard/messages?to=${r.id}`;
-      else { say(e.message); setChatBusy(false); }
-    }
-  }
-  if (r === null) return <div className="pt-6"><EmptyState title="অনুরোধটি পাওয়া যায়নি।" hint="লিংকটি ঠিক আছে কি না দেখুন।" /></div>;
-  if (!r) return <div className="pt-6">প্রোফাইল লোড হচ্ছে...</div>;
+export async function generateMetadata({ params }) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || '';
+  const icon = site ? `${site}/icons/blood-hero.png` : '/icons/blood-hero.png';
+  const fallback = { title: 'রক্তের অনুরোধ — BloodLink', description: 'BloodLink-এ জরুরি রক্তের অনুরোধ দেখুন।' };
+  const r = await getReq(params.id);
+  if (!r) return fallback;
+  const loc = r.location_text || r.hospital_name || '';
+  const title = `${r.blood_group} রক্ত প্রয়োজন${loc ? ` — ${loc}` : ''} | BloodLink`;
+  const description = `${loc} — ${r.blood_group} রক্তের ${urgBn(r.urgency)} অনুরোধ (${r.bags_required} ব্যাগ)। আপনি বা পরিচিত কেউ দিতে পারলে এগিয়ে আসুন।`;
+  return {
+    title, description,
+    openGraph: { title, description, type: 'article', siteName: 'BloodLink', locale: 'bn_BD', images: [{ url: icon, width: 512, height: 512, alt: 'BloodLink' }] },
+    twitter: { card: 'summary', title, description, images: [icon] }
+  };
+}
 
-  const showPhone = r.contact_phone;
-  return (
-    <div className="pt-4 space-y-4 max-w-2xl mx-auto">
-      <Card>
-        <div className="flex items-center justify-between">
-          <Badge tone={urgencyTone(r.urgency)}>{URGENCY_LABEL[r.urgency]}</Badge>
-          <Badge tone="gray">{STATUS_LABEL[r.status] || r.status}</Badge>
-        </div>
-        <h1 className="text-2xl font-extrabold mt-2">{r.blood_group} রক্ত প্রয়োজন • {r.bags_required} ব্যাগ</h1>
-        <dl className="mt-3 space-y-2 text-[15px]">
-          {[['রক্তের গ্রুপ', r.blood_group], ['প্রয়োজন', `${r.bags_required} ব্যাগ`], ['জরুরি অবস্থা', URGENCY_LABEL[r.urgency]],
-            ['হাসপাতাল', r.hospital || r.location_text], ['বিভাগ', divName(r.division_id)], ['জেলা', disName(r.district_id)],
-            ['উপজেলা', upaName(r.upazila_id)], ['প্রয়োজনের তারিখ', r.required_date], ['প্রয়োজনের সময়', r.required_time],
-            ['অতিরিক্ত তথ্য', r.description || '—']].map(([k, v]) => (
-            <div key={k} className="flex gap-2 border-b border-gray-50 pb-1.5"><dt className="w-32 shrink-0 text-gray-500 font-semibold">{k}</dt><dd className="font-semibold">{v}</dd></div>
-          ))}
-        </dl>
-        <p className="text-xs text-gray-500 mt-2">অনুরোধকারী: {r.verified_requester ? '✓ যাচাইকৃত ব্যবহারকারী' : 'ব্যবহারকারী'}</p>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-2 sticky bottom-16 md:static">
-        <a className="btn-blood text-center" href={telLink(showPhone)}>📞 কল করুন</a>
-        {r.whatsapp_enabled
-          ? <a className="btn-blood text-center !bg-green-600 hover:!bg-green-700" target="_blank" rel="noreferrer" href={waLink(showPhone, `আসসালামু আলাইকুম, ${r.blood_group} রক্তের অনুরোধ (${r.id}) দেখে যোগাযোগ করছি।`)}>💬 WhatsApp</a>
-          : <button disabled={chatBusy} onClick={startChat} className="btn-outline text-center">{chatBusy ? 'খুলছে...' : '💬 মেসেজ'}</button>}
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        <button className="btn-outline !px-2 text-sm" onClick={() => { const m = shareMessage(r); navigator.clipboard?.writeText(m).catch(() => {}); if (navigator.share) navigator.share({ title: 'রক্ত প্রয়োজন', text: m }).catch(() => {}); say('লিংক কপি হয়েছে ✓'); }}>🔗 শেয়ার</button>
-        <button className="btn-outline !px-2 text-sm" onClick={() => { setSaved(!saved); store.toggleSave(r.id); say(saved ? 'সংরক্ষণ বাতিল হয়েছে' : '✓ অনুরোধটি সংরক্ষণ করা হয়েছে।'); }}>{saved ? '✓ সংরক্ষিত' : '🔖 সংরক্ষণ'}</button>
-        <button className="btn-outline !px-2 text-sm" onClick={() => setReportOpen(true)}>⚠️ রিপোর্ট</button>
-      </div>
-      <div className="flex gap-2 text-sm">
-        <a className="flex-1 card p-2.5 text-center font-bold hover:bg-gray-50" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(shareMessage(r))}`}>WhatsApp-এ শেয়ার</a>
-        <a className="flex-1 card p-2.5 text-center font-bold hover:bg-gray-50" target="_blank" rel="noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}>Facebook-এ শেয়ার</a>
-      </div>
-      <p className="text-xs text-gray-400">⚠️ নিরাপত্তা: অপরিচিত নম্বরে অগ্রিম টাকা দেবেন না। হাসপাতাল/ব্লাড ব্যাংকের নিয়ম অনুসরণ করুন।</p>
-
-      <Modal open={reportOpen} onClose={() => setReportOpen(false)} title="⚠️ রিপোর্ট করুন">
-        <label className="label">কারণ</label>
-        <select className="input mb-3" value={reason} onChange={e => setReason(e.target.value)}>{REPORT_REASONS.map(x => <option key={x}>{x}</option>)}</select>
-        <Textarea label="বিস্তারিত (ঐচ্ছিক)" value={desc} onChange={e => setDesc(e.target.value)} placeholder="সংক্ষেপে লিখুন..." />
-        <button className="btn-blood" onClick={() => { store.addReport({ request_id: r.id, reason, description: desc, reporter: store.getUser()?.name || 'অতিথি' }); setReportOpen(false); say('রিপোর্ট জমা হয়েছে। ধন্যবাদ।'); }}>জমা দিন</button>
-      </Modal>
-      <Toast msg={toast} />
-    </div>
-  );
+export default function Page({ params }) {
+  return <RequestView id={params.id} />;
 }

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { store, ensureSeed } from '@/lib/store';
 import { Card } from '@/components/ui';
+import AdminGate from '@/components/AdminGate';
 
 const links = [['/admin', '📊 ড্যাশবোর্ড'], ['/admin/users', '👥 ব্যবহারকারী'], ['/admin/requests', '🩸 রক্তের অনুরোধ'], ['/admin/donors', '❤️ রক্তদাতা'], ['/admin/reports', '⚠️ রিপোর্ট'], ['/admin/hospitals', '🏥 হাসপাতাল'], ['/admin/locations', '📍 লোকেশন'], ['/admin/notifications', '🔔 নোটিফিকেশন'], ['/admin/settings', '⚙️ সেটিংস']];
 
@@ -16,7 +17,7 @@ function Shell({ children, title }) {
         <nav className="flex flex-col gap-1">{links.map(([h, l]) => <Link key={h} href={h} className="rounded-xl px-3 py-2 text-sm font-semibold hover:bg-red-50">{l}</Link>)}</nav></Card></aside>
       <div><h1 className="text-xl font-extrabold mb-3">{title}</h1>
         <div className="md:hidden flex gap-1.5 overflow-x-auto pb-2 mb-1">{links.map(([h, l]) => <Link key={h} href={h} className="text-xs font-bold bg-white border rounded-full px-3 py-1.5 whitespace-nowrap">{l}</Link>)}</div>
-        {children}</div>
+        <AdminGate>{children}</AdminGate></div>
     </div>
   );
 }
