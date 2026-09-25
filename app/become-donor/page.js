@@ -59,10 +59,14 @@ export default function BecomeDonor() {
             <button type="button" onClick={() => setF({ ...f, available: false })} className={cn('rounded-xl border-2 py-2.5 font-bold text-sm', !f.available ? 'border-gray-500 bg-gray-100' : '')}>⚪ বর্তমানে উপলভ্য নই</button>
           </div>
           <Input label="শেষ রক্তদানের তারিখ (ঐচ্ছিক)" type="date" value={f.last} onChange={e => setF({ ...f, last: e.target.value })} />
-          <Button loading={loading}>{loading ? 'যুক্ত হচ্ছে...' : 'যুক্ত হোন'}</Button>
+          <Button loading={loading} className="hidden md:inline-flex">{loading ? 'যুক্ত হচ্ছে...' : 'যুক্ত হোন'}</Button>
         </form>
         <p className="text-xs text-gray-400 mt-3">নোট: রক্তদানের উপযুক্ততা সম্পর্কে চূড়ান্ত সিদ্ধান্ত সংশ্লিষ্ট চিকিৎসক/স্বাস্থ্যসেবা প্রদানকারীর।</p>
       </Card>
+      {/* মোবাইলে sticky সাবমিট — নিচে স্ক্রল না করেই যুক্ত হওয়া যায় */}
+      <div className="md:hidden sticky bottom-16 z-30 bg-[#fafafa]/95 backdrop-blur py-2.5 border-t mt-3 -mx-4 px-4">
+        <Button loading={loading} onClick={submit}>{loading ? 'যুক্ত হচ্ছে...' : '❤️ যুক্ত হোন'}</Button>
+      </div>
       <Toast msg={toast} />
     </div>
   );

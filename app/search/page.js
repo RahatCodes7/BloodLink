@@ -42,22 +42,41 @@ function SearchBody() {
   return (
     <div className="pt-4 space-y-4">
       <h1 className="text-2xl font-extrabold">রক্ত খুঁজুন</h1>
+      {/* মোবাইলে: গ্রুপ সবসময়, বাকি ফিল্টার collapsible — ফলাফল দ্রুত দেখা যায় */}
       <Card>
         <p className="label">রক্তের গ্রুপ</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <button onClick={() => setBg('')} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${!bg ? 'bg-gray-900 text-white' : 'bg-white'}`}>সবগুলো</button>
-          {BLOOD_GROUPS.map(g => <button key={g} onClick={() => setBg(bg === g ? '' : g)} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${bg === g ? 'bg-blood-600 text-white' : 'bg-white'}`}>{g}</button>)}
+        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
+          <button onClick={() => setBg('')} className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full border ${!bg ? 'bg-gray-900 text-white' : 'bg-white'}`}>সবগুলো</button>
+          {BLOOD_GROUPS.map(g => <button key={g} onClick={() => setBg(bg === g ? '' : g)} className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full border ${bg === g ? 'bg-blood-600 text-white' : 'bg-white'}`}>{g}</button>)}
         </div>
-        <LocationSelector {...loc} onChange={setLoc} />
-        <div className="grid grid-cols-2 gap-2 mt-1">
-          <label className="block"><span className="label">জরুরি অবস্থা</span>
-            <select className="input" value={urg} onChange={e => setUrg(e.target.value)}>
-              <option value="">সব</option><option value="normal">🟢 সাধারণ</option><option value="urgent">🟠 জরুরি</option><option value="critical">🔴 অত্যন্ত জরুরি</option>
-            </select></label>
-          <label className="block"><span className="label">সাজান</span>
-            <select className="input" value={sort} onChange={e => setSort(e.target.value)}>
-              <option value="urgent">জরুরি আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
-            </select></label>
+        <details className="md:hidden group">
+          <summary className="text-sm font-bold text-blood-700 cursor-pointer list-none flex items-center gap-1">📍 এলাকা ও অন্যান্য ফিল্টার <span className="group-open:rotate-90 transition">›</span></summary>
+          <div className="pt-2">
+            <LocationSelector {...loc} onChange={setLoc} />
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <label className="block"><span className="label">জরুরি অবস্থা</span>
+                <select className="input" value={urg} onChange={e => setUrg(e.target.value)}>
+                  <option value="">সব</option><option value="normal">🟢 সাধারণ</option><option value="urgent">🟠 জরুরি</option><option value="critical">🔴 অত্যন্ত জরুরি</option>
+                </select></label>
+              <label className="block"><span className="label">সাজান</span>
+                <select className="input" value={sort} onChange={e => setSort(e.target.value)}>
+                  <option value="urgent">জরুরি আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
+                </select></label>
+            </div>
+          </div>
+        </details>
+        <div className="hidden md:block">
+          <LocationSelector {...loc} onChange={setLoc} />
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <label className="block"><span className="label">জরুরি অবস্থা</span>
+              <select className="input" value={urg} onChange={e => setUrg(e.target.value)}>
+                <option value="">সব</option><option value="normal">🟢 সাধারণ</option><option value="urgent">🟠 জরুরি</option><option value="critical">🔴 অত্যন্ত জরুরি</option>
+              </select></label>
+            <label className="block"><span className="label">সাজান</span>
+              <select className="input" value={sort} onChange={e => setSort(e.target.value)}>
+                <option value="urgent">জরুরি আগে</option><option value="recent">সাম্প্রতিক আগে</option><option value="date">প্রয়োজনের সময় অনুযায়ী</option>
+              </select></label>
+          </div>
         </div>
       </Card>
       {!list ? <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map(i => <Skeleton key={i} />)}</div>

@@ -32,11 +32,17 @@ export default function Donors() {
       </Link>
       <Card>
         <p className="label">রক্তের গ্রুপ</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <button onClick={() => setBg('')} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${!bg ? 'bg-gray-900 text-white' : 'bg-white'}`}>সব</button>
-          {BLOOD_GROUPS.map(g => <button key={g} onClick={() => setBg(bg === g ? '' : g)} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${bg === g ? 'bg-blood-600 text-white' : 'bg-white'}`}>{g}</button>)}
+        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
+          <button onClick={() => setBg('')} className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full border ${!bg ? 'bg-gray-900 text-white' : 'bg-white'}`}>সব</button>
+          {BLOOD_GROUPS.map(g => <button key={g} onClick={() => setBg(bg === g ? '' : g)} className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full border ${bg === g ? 'bg-blood-600 text-white' : 'bg-white'}`}>{g}</button>)}
         </div>
-        <LocationSelector {...loc} onChange={setLoc} />
+        <details className="md:hidden group">
+          <summary className="text-sm font-bold text-blood-700 cursor-pointer list-none flex items-center gap-1">📍 এলাকা বেছে নিন <span className="group-open:rotate-90 transition">›</span></summary>
+          <div className="pt-2">
+            <LocationSelector {...loc} onChange={setLoc} />
+          </div>
+        </details>
+        <div className="hidden md:block"><LocationSelector {...loc} onChange={setLoc} /></div>
         <label className="flex items-center gap-2 text-sm font-bold mt-1"><input type="checkbox" checked={onlyAvail} onChange={e => setOnlyAvail(e.target.checked)} className="w-5 h-5 accent-red-600" />শুধু উপলভ্য দাতা</label>
       </Card>
       {!all ? <div className="grid sm:grid-cols-2 gap-3">{[1, 2].map(i => <Skeleton key={i} />)}</div>
