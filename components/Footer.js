@@ -10,7 +10,7 @@ export default function Footer() {
           <Link href="/privacy">প্রাইভেসি</Link><Link href="/terms">শর্তাবলি</Link>
         </nav>
         <div className="text-gray-500"><p className="font-bold text-gray-700 mb-1">জরুরি?</p><p>রক্ত খুঁজতে <Link className="text-blood-700 font-bold" href="/search">এখানে ক্লিক করুন</Link> অথবা নিকটস্থ হাসপাতালের জরুরি বিভাগে যোগাযোগ করুন।</p>
-        <p className="text-[11px] text-gray-400 mt-3">Icons by <a className="underline" href="https://www.flaticon.com/" target="_blank" rel="noreferrer">Flaticon</a> (Freepik, wanicon, Vector Stall)</p></div>
+        <p className="text-[11px] text-gray-400 mt-3">Icons by <a className="underline" href="https://www.flaticon.com/" target="_blank" rel="noreferrer">Flaticon</a> (Freepik, wanicon, Vector Stall) + <a className="underline" href="https://openmoji.org/" target="_blank" rel="noreferrer">OpenMoji</a></p></div>
       </div>
     </footer>
   );

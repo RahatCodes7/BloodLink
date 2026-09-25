@@ -66,8 +66,14 @@ export default function Home() {
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blood-700 via-blood-600 to-blood-800 text-white p-6 sm:p-10 shadow-soft">
         <img src="/icons/blood-double.png" alt="" aria-hidden="true" draggable={false}
           className="absolute -right-4 -top-4 w-40 sm:w-56 opacity-90 animate-floaty drop-shadow-2xl pointer-events-none" />
-        <img src="/icons/blood-circle.png" alt="" aria-hidden="true" draggable={false}
-          className="absolute right-32 bottom-2 w-14 opacity-60 animate-floaty-sm pointer-events-none hidden sm:block" />
+        <img src="/icons/blood-bag.png" alt="" aria-hidden="true" draggable={false}
+          className="absolute right-4 sm:right-48 bottom-4 w-20 sm:w-28 opacity-95 animate-floaty-sm drop-shadow-2xl pointer-events-none" />
+        <img src="/icons/stethoscope.svg" alt="" aria-hidden="true" draggable={false}
+          className="absolute left-2 -bottom-4 w-28 sm:w-40 opacity-30 pointer-events-none" style={{ filter: 'brightness(0) invert(1)' }} />
+        {/* ECG pulse line */}
+        <svg viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true" className="absolute bottom-0 left-0 w-full h-8 opacity-25 pointer-events-none">
+          <polyline points="0,22 60,22 75,22 85,8 95,34 105,22 160,22 175,22 185,12 195,30 205,22 260,22 275,22 285,18 300,22" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
         <div className="relative">
           <span className="inline-flex items-center gap-1.5 bg-white/15 text-xs font-bold px-3 py-1.5 rounded-full mb-3">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> এখনই {feed ? feed.length : '…'}টি সক্রিয় অনুরোধ
