@@ -67,4 +67,38 @@ async function loginUser({ email, password }) {
 /** Cookie/header থেকে session user (id+role)। DB lookup কলার প্রয়োজনে করবে। */
 function sessionFromToken(token) { return token ? verifyToken(token) : null; }
 
-module.exports = { COOKIE, TTL, hashPassword, signToken, verifyToken, cookieHeader, clearCookieHeader, registerUser, loginUser, sessionFromToken };
+/** Firebase ID-token যাচাই → verified ফোন (+880...) ফেরত। Web API key দিয়েই চলে। */
+async function verifiedPhoneFromIdToken(idToken) {
+  const key = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  if (!key) { const e = new Error('Firebase কনফিগার হয়নি।'); e.status = 500; throw e; }
+  const r = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${key}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken })
+  });
+  const j = await r.json().catch(() => ({}));
+  const phone = j && j.users && j.users[0] && j.users[0].phoneNumber;
+  if (!phone) { const e = new Error('OTP যাচাই হয়নি।'); e.status = 401; throw e; }
+  return phone; // +8801XXXXXXXXX
+}
+
+function e164ToBD(phone) {
+  const d = String(phone || '');
+  if (d.startsWith('+880')) return '0' + d.slice(4);
+  return d;
+}
+
+/** পাসওয়ার্ড রিসেট: email + Firebase-verified phone মিললে নতুন hash বসে। */
+async function resetPasswordWithFirebase({ email, newPassword, idToken }) {
+  const em = String(email || '').trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { const e = new Error('সঠিক ইমেইল দিন।'); e.status = 400; throw e; }
+  if (!newPassword || newPassword.length < 6) { const e = new Error('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।'); e.status = 400; throw e; }
+  if (!idToken) { const e = new Error('OTP যাচাই করুন।'); e.status = 401; throw e; }
+  const verifiedPhone = e164ToBD(await verifiedPhoneFromIdToken(idToken));
+  const { query } = require('../lib/db/client');
+  const row = (await query('SELECT id, phone FROM users WHERE lower(email)=lower($1) AND deleted_at IS NULL', [em])).rows[0];
+  if (!row || row.phone !== verifiedPhone) { const e = new Error('তথ্য মিলছে না। ইমেইল ও ফোন যাচাই করুন।'); e.status = 400; throw e; }
+  const hash = await hashPassword(newPassword);
+  await query('UPDATE users SET password_hash=$2, updated_at=now() WHERE id=$1', [row.id, hash]);
+  return { id: row.id };
+}
+
+module.exports = { COOKIE, TTL, hashPassword, signToken, verifyToken, cookieHeader, clearCookieHeader, registerUser, loginUser, sessionFromToken, resetPasswordWithFirebase };

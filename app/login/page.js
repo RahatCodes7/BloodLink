@@ -94,7 +94,7 @@ export default function Login() {
             </button>
             <div className="text-sm mt-4 flex justify-between">
               <Link href="/register" className="text-blood-700 font-bold hover:underline">নতুন অ্যাকাউন্ট খুলুন →</Link>
-              <span className="text-gray-400">পাসওয়ার্ড ভুলে গেছেন?</span>
+              <Link href="/forgot-password" className="text-blood-700 font-bold hover:underline">পাসওয়ার্ড ভুলে গেছেন?</Link>
             </div>
           </div>
         </div>
