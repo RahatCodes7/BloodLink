@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from './icons';
 
 function isInstalled() {
@@ -51,9 +52,9 @@ export function AppInstallButton() {
         className="md:hidden bg-blood-600 hover:bg-blood-700 active:scale-95 transition text-white text-xs font-extrabold px-3 py-2 rounded-xl shadow-soft">
         📲 App
       </button>
-      {help && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={() => setHelp(false)}>
-          <div className="bg-white w-full sm:max-w-sm rounded-2xl p-5 animate-pop-in" onClick={e => e.stopPropagation()}>
+      {help && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/50 p-4" onClick={() => setHelp(false)}>
+          <div className="bg-white w-full sm:max-w-sm rounded-2xl p-5 animate-pop-in max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <p className="font-extrabold mb-2">📲 অ্যাপ ইনস্টল করুন</p>
             <ul className="text-sm text-gray-600 space-y-1.5 list-disc ml-5">
               <li><b>Chrome:</b> মেনু (⋮) → <b>Add to Home screen</b> / <b>Install app</b></li>
@@ -62,7 +63,8 @@ export function AppInstallButton() {
             </ul>
             <button onClick={() => setHelp(false)} className="btn-blood w-full mt-3 !py-2.5">বুঝেছি</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
