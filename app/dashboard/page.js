@@ -53,6 +53,7 @@ export default function Dashboard() {
         <Link href="/request-new" className="btn-blood text-center">🩸 রক্তের অনুরোধ করুন</Link>
         <Link href="/dashboard/donor-profile" className="btn-outline text-center">❤️ রক্তদাতা প্রোফাইল</Link>
         <Link href="/search" className="btn-outline text-center">🔎 রক্ত খুঁজুন</Link>
+        <Link href="/requests" className="btn-outline text-center">📋 সকল আবেদন</Link>
         <Link href="/campaigns" className="btn-outline text-center sm:col-span-3">📣 রক্তদান ক্যাম্পেইন দেখুন</Link>
       </div>
       <button className="mt-4 text-sm text-gray-500 underline" onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {} store.logout(); router.push('/'); }}>লগআউট</button>

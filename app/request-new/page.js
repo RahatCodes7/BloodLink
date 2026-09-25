@@ -23,6 +23,7 @@ export default function NewRequest() {
   function next() {
     if (step === 0 && !f.blood) return say('রক্তের গ্রুপ নির্বাচন করুন।');
     if (step === 3 && (!f.division || !f.district)) return say('বিভাগ ও জেলা নির্বাচন করুন।');
+    if (step === 3 && !f.upazila) return say('উপজেলা নির্বাচন করুন (আবশ্যক)।');
     if (step === 4 && !f.date) return say('প্রয়োজনের তারিখ দিন।');
     if (step === 5 && !isValidBDPhone(f.phone)) return say('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)।');
     setStep(s => Math.min(s + 1, 7));

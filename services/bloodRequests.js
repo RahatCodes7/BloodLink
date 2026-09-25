@@ -20,7 +20,8 @@ async function createRequest(user, input) {
   if (!user) { const e = new Error('Unauthorized'); e.status = 401; throw e; }
   validateRequestInput(input);
   await checkCooldown(user.id);
-  const expires = input.expires_at || new Date(new Date(input.required_date).getTime() + 48 * 3600 * 1000).toISOString();
+  // মেয়াদ: তৈরি থেকে ৩ দিন (005 migration-এর expires_at কলামে)
+  const expires = new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString();
   const row = await repo.create({
     id: makeId(), requester_id: user.id, blood_group: input.blood_group, bags_required: input.bags_required,
     urgency: input.urgency, required_date: input.required_date, required_time: input.required_time || null,
@@ -30,36 +31,34 @@ async function createRequest(user, input) {
     description: (input.description || '').slice(0, 500) || null, contact_phone: input.contact_phone.trim(),
     whatsapp_available: input.whatsapp_available ?? true, status: 'ACTIVE', expires_at: expires
   });
-  // Matching donors → notification (spam এড়াতে সর্বোচ্চ 50 জন, emergency_available only):
+  // শুধু একই উপজেলার ডোনারদের নোটিফিকেশন (একই গ্রুপ + উপলভ্য + emergency):
   try {
-    const matched = await donorsRepo.matchDonors({
-      bloodGroup: row.blood_group, upazilaId: row.upazila_id, districtId: row.district_id, divisionId: row.division_id, limit: 50
-    });
     const { query } = require('../lib/db/client');
-    const donorUserIds = (await query(`SELECT user_id FROM donor_profiles WHERE id = ANY($1) AND emergency_available=TRUE`, [matched.map(m => m.id)])).rows;
-    for (const d of donorUserIds.slice(0, 50)) {
+    const donors = (await query(
+      `SELECT user_id FROM donor_profiles WHERE blood_group=$1 AND upazila_id=$2 AND availability_status='AVAILABLE' AND emergency_available=TRUE LIMIT 100`,
+      [row.blood_group, row.upazila_id])).rows;
+    const upa = (await query('SELECT name_bn FROM upazilas WHERE id=$1', [row.upazila_id]).catch(() => null));
+    const upaName = (upa && upa.rows[0] && upa.rows[0].name_bn) || '';
+    for (const d of donors) {
+      if (!d.user_id || d.user_id === row.requester_id) continue;
       await notifications.create({
         userId: d.user_id, type: 'NEW_BLOOD_REQUEST',
-        title: '🔔 নতুন রক্তের প্রয়োজন',
-        message: `${row.blood_group} রক্ত প্রয়োজন (${row.bags_required} ব্যাগ)।`,
+        title: '🔔 আপনার এলাকায় রক্তের প্রয়োজন',
+        message: `${upaName} — ${row.blood_group} রক্ত প্রয়োজন (${row.bags_required} ব্যাগ)।`,
         relatedRequestId: row.id
       }).catch(() => {});
     }
-  } catch {}
-  // জরুরি/অত্যন্ত জরুরি → সবার ফোনে Web Push broadcast (সাইট বন্ধ থাকলেও):
-  if (row.urgency === 'URGENT' || row.urgency === 'CRITICAL') {
-    try {
-      const { broadcast } = require('./push');
-      const { query } = require('../lib/db/client');
-      const dn = await query('SELECT name_bn FROM districts WHERE id=$1', [row.district_id]).catch(() => null);
-      const dist = (dn && dn.rows[0] && dn.rows[0].name_bn) || 'আপনার এলাকায়';
-      broadcast({
+    // জরুরি/অত্যন্ত জরুরি → একই উপজেলার ফোনে Web Push (সাইট বন্ধ থাকলেও):
+    if ((row.urgency === 'URGENT' || row.urgency === 'CRITICAL') && donors.length) {
+      const { pushToMatchingDonors } = require('./push');
+      pushToMatchingDonors({
+        bloodGroup: row.blood_group, upazilaId: row.upazila_id,
         title: `🚨 জরুরি রক্ত প্রয়োজন (${row.blood_group})`,
-        body: `${dist} — ${row.bags_required} ব্যাগ ${row.blood_group} রক্ত লাগবে। বিস্তারিত দেখুন।`,
+        body: `${upaName} — ${row.bags_required} ব্যাগ ${row.blood_group} রক্ত লাগবে।`,
         url: `/request/${row.id}`
       }).catch(() => {});
-    } catch {}
-  }
+    }
+  } catch {}
   return row;
 }
 
@@ -78,4 +77,49 @@ async function changeStatus(user, id, to, opts = {}) {
 
 async function expireDueRequests() { return repo.expireDue(500); }
 
-module.exports = { createRequest, changeStatus, expireDueRequests };
+/** মেয়াদ শেষের ১২ ঘণ্টা আগে অনুরোধকারীকে মনে করানো (in-app + push)। cron থেকে ডাকুন। */
+async function remindExpiringRequests() {
+  const { query } = require('../lib/db/client');
+  const rows = (await query(
+    `SELECT * FROM blood_requests WHERE status='ACTIVE' AND deleted_at IS NULL
+     AND expires_at IS NOT NULL AND expires_at <= now() + interval '12 hours' AND expires_at > now()
+     AND (last_expiry_reminder_at IS NULL OR last_expiry_reminder_at < created_at) LIMIT 200`)).rows;
+  let n = 0;
+  for (const r of rows) {
+    if (!r.requester_id) continue;
+    await notifications.create({
+      userId: r.requester_id, type: 'REQUEST_EXPIRING',
+      title: '⏳ অনুরোধের মেয়াদ শেষ হতে যাচ্ছে',
+      message: `${r.blood_group} অনুরোধ (${r.id})-এর মেয়াদ ১২ ঘণ্টার মধ্যে শেষ। রক্ত পেয়ে গেলে "পাওয়া গেছে" দিন, নইলে সময় বাড়ান।`,
+      relatedRequestId: r.id
+    }).catch(() => {});
+    try {
+      const { pushToUsers } = require('./push');
+      pushToUsers([r.requester_id], {
+        title: '⏳ রক্তের অনুরোধের মেয়াদ শেষ হতে যাচ্ছে',
+        body: 'সময় বাড়াতে "আমার অনুরোধ"-এ যান।',
+        url: '/dashboard/requests'
+      }).catch(() => {});
+    } catch {}
+    await query('UPDATE blood_requests SET last_expiry_reminder_at=now() WHERE id=$1', [r.id]).catch(() => {});
+    n++;
+  }
+  return n;
+}
+
+/** মেয়াদ বাড়ানো: মালিক, ACTIVE, সর্বোচ্চ ৩ বার (+৩ দিন করে)। */
+async function extendRequest(user, id) {
+  if (!user) { const e = new Error('লগইন করুন।'); e.status = 401; throw e; }
+  const { query } = require('../lib/db/client');
+  const cur = (await query('SELECT * FROM blood_requests WHERE id=$1 AND deleted_at IS NULL', [id])).rows[0];
+  if (!cur) { const e = new Error('অনুরোধটি পাওয়া যায়নি।'); e.status = 404; throw e; }
+  if (cur.requester_id !== user.id) { const e = new Error('শুধু অনুরোধকারী বাড়াতে পারে।'); e.status = 403; throw e; }
+  if (cur.status !== 'ACTIVE') { const e = new Error('শুধু সক্রিয় অনুরোধের মেয়াদ বাড়ানো যায়।'); e.status = 422; throw e; }
+  if ((cur.extended_count || 0) >= 3) { const e = new Error('সর্বোচ্চ ৩ বার বাড়ানো যায়। নতুন অনুরোধ করুন।'); e.status = 422; throw e; }
+  const r = (await query(
+    `UPDATE blood_requests SET expires_at = now() + interval '3 days', extended_count = COALESCE(extended_count,0)+1, last_expiry_reminder_at=NULL, updated_at=now() WHERE id=$1 RETURNING *`,
+    [id])).rows[0];
+  return r;
+}
+
+module.exports = { createRequest, changeStatus, expireDueRequests, remindExpiringRequests, extendRequest };

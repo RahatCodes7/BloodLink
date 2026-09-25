@@ -71,4 +71,26 @@ async function pushToUsers(userIds, { title, body, url }) {
   return { sent };
 }
 
-module.exports = { configured, broadcast, pushToUsers, saveSubscription, removeSubscription };
+/** একই উপজেলা+গ্রুপের ডোনারদের push (জরুরি অনুরোধ) — বাকিদের কাছে যায় না। */
+async function pushToMatchingDonors({ bloodGroup, upazilaId, title, body, url }) {
+  if (!configured() || !upazilaId) return { sent: 0 };
+  setup();
+  const payload = JSON.stringify({ title, body, url: url || '/' });
+  const r = await query(
+    `SELECT s.id, s.endpoint, s.p256dh, s.auth FROM push_subscriptions s
+     JOIN donor_profiles d ON d.user_id = s.user_id
+     WHERE d.blood_group=$1 AND d.upazila_id=$2 AND d.availability_status='AVAILABLE' AND d.emergency_available=TRUE
+     LIMIT 200`, [bloodGroup, upazilaId]);
+  let sent = 0;
+  await Promise.all(r.rows.map(async (s) => {
+    try {
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 3600 });
+      sent++;
+    } catch (e) {
+      if (e.statusCode === 404 || e.statusCode === 410) await query('DELETE FROM push_subscriptions WHERE id=$1', [s.id]).catch(() => {});
+    }
+  }));
+  return { sent };
+}
+
+module.exports = { configured, broadcast, pushToUsers, pushToMatchingDonors, saveSubscription, removeSubscription };

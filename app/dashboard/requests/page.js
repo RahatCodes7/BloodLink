@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { store, ensureSeed } from '@/lib/store';
 import { STATUS_LABEL } from '@/lib/constants';
+import { expiryBn, createdBn } from '@/lib/requestMeta';
 import { DashShell } from '../page';
 import { Card, Badge, EmptyState, Toast, Modal } from '@/components/ui';
 
@@ -60,6 +61,18 @@ export default function MyRequests() {
     setBusy(null);
   }
 
+  async function extend(id) {
+    setBusy(id + 'ext');
+    try {
+      const r = await fetch(`/api/blood-requests/${id}/extend`, { method: 'POST' });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'বাড়ানো যায়নি');
+      say(`✓ মেয়াদ ৩ দিন বাড়লো (${j.data.extended_count}/৩ বার)।`);
+      reload();
+    } catch (e) { say(e.message); }
+    setBusy(null);
+  }
+
   if (list === null) return <DashShell title="আমার রক্তের অনুরোধ"><p className="text-sm text-gray-400">লোড হচ্ছে...</p></DashShell>;
   if (!list.length) return <DashShell title="আমার রক্তের অনুরোধ"><EmptyState title="এখনো কোনো অনুরোধ করেননি।" hint="প্রয়োজনে নতুন অনুরোধ করুন।" /></DashShell>;
 
@@ -68,6 +81,8 @@ export default function MyRequests() {
       <div className="grid sm:grid-cols-2 gap-3">
         {list.map(r => {
           const active = r.status === 'ACTIVE';
+          const exp = expiryBn(r.expires_at);
+          const canExtend = active && exp && !exp.gone && (r.extended_count || 0) < 3;
           return (
             <Card key={r.id} className={!active ? 'opacity-90' : ''}>
               <div className="flex justify-between items-center gap-2">
@@ -75,7 +90,9 @@ export default function MyRequests() {
                 <Badge tone={tone(r.status)}>{STATUS_LABEL[r.status] || r.status}</Badge>
               </div>
               <p className="text-sm text-gray-500 mt-0.5">{r.hospital || r.location_text} • {r.required_date}</p>
+              <p className="text-[11px] text-gray-400">📝 {createdBn(r.created_at)}-এ করা{exp && active ? ` • ⏳ ${exp.text}` : ''}</p>
               {r.status === 'FULFILLED' && <p className="text-xs font-bold text-green-700 mt-1">✓ রক্তের ব্যবস্থা হয়ে গেছে — ধন্যবাদ!</p>}
+              {exp && exp.soon && active && <p className="text-xs font-bold text-orange-600 mt-1">⚠️ মেয়াদ শেষ হতে যাচ্ছে — সময় বাড়ান বা "পাওয়া গেছে" দিন।</p>}
               <div className="flex flex-wrap gap-1.5 mt-2.5">
                 <Link href={`/request/${r.id}`} className="text-xs font-bold bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 transition">বিস্তারিত</Link>
                 {active && (
@@ -83,6 +100,11 @@ export default function MyRequests() {
                     <button disabled={busy} onClick={() => setStatus(r.id, 'FULFILLED', '✓ রক্তের ব্যবস্থা হয়েছে! এটি আর সক্রিয় তালিকায় দেখাবে না।')} className="text-xs font-bold bg-green-600 text-white rounded-lg px-3 py-1.5 hover:bg-green-700 transition disabled:opacity-50">
                       {busy === r.id + 'FULFILLED' ? '...' : '✓ রক্ত পাওয়া গেছে'}
                     </button>
+                    {canExtend && (
+                      <button disabled={busy} onClick={() => extend(r.id)} className="text-xs font-bold bg-blue-100 text-blue-800 rounded-lg px-3 py-1.5 transition disabled:opacity-50">
+                        {busy === r.id + 'ext' ? '...' : `⏳ সময় বাড়ান (+৩ দিন)`}
+                      </button>
+                    )}
                     <button disabled={busy} onClick={() => setStatus(r.id, 'CANCELLED', 'অনুরোধ বাতিল হয়েছে।')} className="text-xs font-bold bg-orange-100 text-orange-800 rounded-lg px-3 py-1.5 transition disabled:opacity-50">বাতিল</button>
                   </>
                 )}

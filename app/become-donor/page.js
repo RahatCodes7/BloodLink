@@ -22,6 +22,7 @@ export default function BecomeDonor() {
     if (f.name.trim().length < 3) return say('সঠিক নাম দিন।');
     if (!isValidBDPhone(f.phone)) return say('সঠিক ফোন নম্বর দিন।');
     if (!f.blood || !f.district) return say('গ্রুপ ও জেলা নির্বাচন করুন।');
+    if (!f.upazila) return say('উপজেলা নির্বাচন করুন (আবশ্যক)।');
     setLoading(true);
     try {
       const r = await fetch('/api/donors/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' },

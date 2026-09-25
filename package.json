@@ -10,7 +10,7 @@
     "lint": "next lint",
     "db:migrate": "node lib/db/migrate.js",
     "db:seed": "node lib/db/seed.js",
-    "db:expire": "node -e \"import('./services/bloodRequests.js').then(m=>m.expireDueRequests().then(r=>console.log('expired:',r)).catch(e=>{console.error(e.message);process.exit(1)}))\""
+    "db:expire": "node -e \"import('./services/bloodRequests.js').then(async m=>{const e=await m.expireDueRequests();const n=await m.remindExpiringRequests();console.log('expired:',e.length,'reminded:',n)}).catch(e=>{console.error(e.message);process.exit(1)})\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

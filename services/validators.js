@@ -30,6 +30,7 @@ function validateRequestInput(d) {
   if (!isBDPhone(d.contact_phone)) errs.push('contact_phone invalid');
   if (d.description && d.description.length > 500) errs.push('description too long');
   if (!d.division_id || !d.district_id) errs.push('division/district required');
+  if (!d.upazila_id) errs.push('উপজেলা নির্বাচন করুন।');
   if (errs.length) { const e = new Error(errs.join('; ')); e.status = 400; throw e; }
 }
 
