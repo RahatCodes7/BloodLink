@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import ProgressBar from '@/components/ProgressBar';
 import SupportButton from '@/components/SupportButton';
 import PushPrompt from '@/components/PushPrompt';
+import InstallPrompt from '@/components/InstallPrompt';
 
 export const metadata = {
   title: 'BloodLink — রক্ত খুঁজুন। জীবন বাঁচান।',
@@ -17,7 +18,7 @@ export const viewport = { themeColor: '#b91c1c', width: 'device-width', initialS
 export default function RootLayout({ children }) {
   return (
     <html lang="bn">
-      <head><link rel="icon" href="/icon.svg" /></head>
+      <head><link rel="icon" href="/icon.svg" /><link rel="apple-touch-icon" href="/icon-192.png" /></head>
       <body>
         <ProgressBar />
         <Header />
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
         <BottomNav />
         <SupportButton />
         <PushPrompt />
+        <InstallPrompt />
       </body>
     </html>
   );
