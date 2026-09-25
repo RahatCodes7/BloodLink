@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createRequire } from 'module';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 const require = createRequire(import.meta.url);
 
 // GET /api/cron/expire?key=SECRET — Render cron-এর বদলে UptimeRobot/cron-job.org থেকে হিট করুন
@@ -12,7 +13,7 @@ export async function GET(req) {
     if (!process.env.CRON_SECRET || searchParams.get('key') !== process.env.CRON_SECRET) {
       return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
     }
-    const { expireDueRequests, remindExpiringRequests } = require('../../../services/bloodRequests');
+    const { expireDueRequests, remindExpiringRequests } = require('../../../../services/bloodRequests');
     const expired = await expireDueRequests();
     const reminded = await remindExpiringRequests();
     return NextResponse.json({ ok: true, data: { expired: expired.length, reminded } });
