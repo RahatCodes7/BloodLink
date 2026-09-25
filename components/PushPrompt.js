@@ -10,8 +10,14 @@ export default function PushPrompt() {
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
-    if (!pushSupported() || wasPushEnabled() || pushPromptSnoozed()) return;
-    if (pushPermission() !== 'default') return;
+    if (!pushSupported()) return;
+    // ?push=test দিলে জোর করে দেখাবে (ডিবাগ):
+    let force = false;
+    try { force = new URLSearchParams(window.location.search).get('push') === 'test'; } catch {}
+    if (!force) {
+      if (wasPushEnabled() || pushPromptSnoozed()) return;
+      if (pushPermission() !== 'default') return;
+    }
     const t = setTimeout(() => setShow(true), 2500); // ২.৫s পর ভদ্রভাবে জিজ্ঞেস
     return () => clearTimeout(t);
   }, []);
