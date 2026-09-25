@@ -6,7 +6,7 @@ import { store, ensureSeed } from '@/lib/store';
 import { eligibility } from '@/lib/eligibility';
 import { Card, Avatar } from '@/components/ui';
 
-const side = [['/dashboard', '🏠 ড্যাশবোর্ড'], ['/dashboard/requests', '🩸 অনুরোধ'], ['/dashboard/donor-profile', '❤️ রক্তদাতা'], ['/dashboard/saved', '🔖 সংরক্ষিত'], ['/dashboard/notifications', '🔔 নোটিফাই'], ['/dashboard/messages', '💬 মেসেজ'], ['/dashboard/profile', '👤 প্রোফাইল']];
+const side = [['/dashboard', '🏠 ড্যাশবোর্ড'], ['/dashboard/requests', '🩸 অনুরোধ'], ['/dashboard/donor-profile', '❤️ রক্তদাতা'], ['/dashboard/saved', '🔖 সংরক্ষিত'], ['/dashboard/notifications', '🔔 নোটিফাই'], ['/dashboard/profile', '👤 প্রোফাইল']];
 
 export function DashShell({ children, title }) {
   const router = useRouter();

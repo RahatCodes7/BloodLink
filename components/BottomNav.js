@@ -23,7 +23,6 @@ const hubLinks = [
   ['/dashboard/donor-profile', 'heart', 'রক্তদাতা প্রোফাইল'],
   ['/dashboard/saved', 'bookmark', 'সংরক্ষিত'],
   ['/dashboard/notifications', 'bell', 'নোটিফিকেশন'],
-  ['/dashboard/messages', 'chat', 'মেসেজ'],
   ['/campaigns', 'clip', 'ক্যাম্পেইন'],
   ['/compatibility', 'drop', 'সামঞ্জস্য চার্ট'],
   ['/dashboard/profile', 'clip', 'প্রোফাইল সেটিংস']
