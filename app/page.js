@@ -78,7 +78,7 @@ export default function Home() {
             <Link href="/search" className="bg-white text-blood-700 font-bold rounded-xl px-6 py-3 text-center inline-flex items-center justify-center gap-2 hover:bg-red-50 active:scale-[.98] transition shadow-lg">রক্ত খুঁজুন <Icon name="arrow" className="w-5 h-5" /></Link>
             <Link href="/become-donor" className="border-2 border-white/70 font-bold rounded-xl px-6 py-3 text-center inline-flex items-center justify-center gap-2 hover:bg-white/10 active:scale-[.98] transition">রক্তদাতা হন</Link>
           </div>
-          <StatsRow />
+          <StatsRow feed={feed} />
         </div>
       </section>
 
@@ -152,11 +152,30 @@ export default function Home() {
   );
 }
 
-function StatsRow() {
+function StatsRow({ feed }) {
   const [on, setOn] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setOn(true), 300); return () => clearTimeout(t); }, []);
-  const a = useCountUp(1200, on), b = useCountUp(87, on), c = useCountUp(19, on);
-  const items = [[a + '+', 'নিবন্ধিত রক্তদাতা'], [b, 'সক্রিয় অনুরোধ'], [c, 'আজ রক্তের ব্যবস্থা']];
+  const [counts, setCounts] = useState({ donors: 0, active: 0, fulfilled: 0 });
+  useEffect(() => {
+    const t = setTimeout(() => setOn(true), 300);
+    (async () => {
+      try {
+        const [r1, r2] = await Promise.all([
+          fetch('/api/blood-requests?limit=50').then(r => r.json()).catch(() => null),
+          fetch('/api/donors?limit=50').then(r => r.json()).catch(() => null)
+        ]);
+        const reqs = (r1 && r1.ok && r1.data) || (feed || []);
+        const donors = (r2 && r2.ok && r2.data) || [];
+        setCounts({
+          donors: donors.length,
+          active: reqs.filter(r => r.status === 'ACTIVE').length,
+          fulfilled: reqs.filter(r => r.status === 'FULFILLED').length
+        });
+      } catch {}
+    })();
+    return () => clearTimeout(t);
+  }, []);
+  const a = useCountUp(counts.donors, on), b = useCountUp(counts.active, on), c = useCountUp(counts.fulfilled, on);
+  const items = [[a, 'নিবন্ধিত রক্তদাতা'], [b, 'সক্রিয় অনুরোধ'], [c, 'রক্তের ব্যবস্থা হয়েছে']];
   return (
     <div className="mt-5 grid grid-cols-3 gap-2 max-w-md">
       {items.map(([v, l]) => (
