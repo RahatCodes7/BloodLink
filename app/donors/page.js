@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { store, ensureSeed } from '@/lib/store';
+import { fetchDonors } from '@/lib/api';
 import { BLOOD_GROUPS } from '@/lib/constants';
 import LocationSelector from '@/components/LocationSelector';
 import DonorCard from '@/components/DonorCard';
@@ -12,7 +13,15 @@ export default function Donors() {
   const [loc, setLoc] = useState({ division: '', district: '', upazila: '' });
   const [onlyAvail, setOnlyAvail] = useState(true);
   const [all, setAll] = useState(null);
-  useEffect(() => { ensureSeed(); const t = setTimeout(() => setAll(store.getDonors()), 350); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    ensureSeed();
+    let live = true;
+    (async () => {
+      try { const rows = await fetchDonors(); if (live) setAll(rows); }
+      catch { if (live) setAll(store.getDonors()); }
+    })();
+    return () => { live = false; };
+  }, []);
   const list = (all || []).filter(d => (!bg || d.blood_group === bg) && (!loc.district || d.district_id === loc.district) && (!onlyAvail || d.available));
   return (
     <div className="pt-4 space-y-4">

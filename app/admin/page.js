@@ -12,8 +12,18 @@ export default function AdminHome() {
   const [d, setD] = useState(null);
   useEffect(() => {
     ensureSeed();
-    const reqs = store.getRequests();
-    const donors = store.getDonors();
+    (async () => {
+      let reqs = null, donors = null;
+      try {
+        const [r1, r2] = await Promise.all([
+          fetch('/api/blood-requests?limit=50').then(r => r.json()),
+          fetch('/api/donors?limit=50').then(r => r.json())
+        ]);
+        if (r1.ok) reqs = r1.data.map(r => ({ ...r, urgency: String(r.urgency || '').toLowerCase() }));
+        if (r2.ok) donors = r2.data;
+      } catch {}
+      reqs = reqs || store.getRequests();
+      donors = donors || store.getDonors();
     const byBg = BLOOD_GROUPS.map(g => ({ label: g, value: reqs.filter(r => r.blood_group === g).length }));
     const byStatus = Object.keys(STATUS_LABEL).map(s => ({ label: STATUS_LABEL[s], value: reqs.filter(r => r.status === s).length })).filter(x => x.value > 0);
     const days = [...Array(7)].map((_, i) => {
@@ -26,6 +36,7 @@ export default function AdminHome() {
     const byDist = Object.entries(distMap).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 5);
     const donorBg = BLOOD_GROUPS.map(g => ({ label: g, value: donors.filter(x => x.blood_group === g).length }));
     setD({ byBg, byStatus, days, byDist, donorBg });
+    })();
   }, []);
   return (
     <Shell title="অ্যাডমিন ড্যাশবোর্ড">

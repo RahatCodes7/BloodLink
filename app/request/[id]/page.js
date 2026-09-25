@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { store, ensureSeed } from '@/lib/store';
+import { fetchRequest } from '@/lib/api';
 import { URGENCY_LABEL, STATUS_LABEL, REPORT_REASONS } from '@/lib/constants';
 import { divName, disName, upaName } from '@/lib/locations';
 import { telLink, waLink, shareMessage } from '@/lib/utils';
@@ -19,8 +20,13 @@ export default function RequestDetails() {
 
   useEffect(() => {
     ensureSeed();
-    setR(store.getRequest(id));
+    let live = true;
+    (async () => {
+      try { const row = await fetchRequest(id); if (live) setR(row); }
+      catch { if (live) setR(store.getRequest(id) || null); }
+    })();
     setSaved(store.getSaved().includes(id));
+    return () => { live = false; };
   }, [id]);
 
   function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }

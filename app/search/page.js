@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { store, ensureSeed } from '@/lib/store';
+import { fetchRequests } from '@/lib/api';
 import { BLOOD_GROUPS } from '@/lib/constants';
 import LocationSelector from '@/components/LocationSelector';
 import RequestCard from '@/components/RequestCard';
@@ -15,7 +16,15 @@ function SearchBody() {
   const [urg, setUrg] = useState('');
   const [all, setAll] = useState(null);
 
-  useEffect(() => { ensureSeed(); const t = setTimeout(() => setAll(store.getRequests()), 400); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    ensureSeed();
+    let live = true;
+    (async () => {
+      try { const rows = await fetchRequests(); if (live) setAll(rows); }
+      catch { if (live) setAll(store.getRequests()); }
+    })();
+    return () => { live = false; };
+  }, []);
 
   const list = useMemo(() => {
     if (!all) return null;

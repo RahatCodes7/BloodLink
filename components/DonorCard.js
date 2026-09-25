@@ -16,7 +16,9 @@ export default function DonorCard({ d }) {
       </div>
       <div className="mt-2"><Badge tone={d.available ? 'green' : 'gray'}>{d.available ? '🟢 বর্তমানে উপলভ্য' : '⚪ বর্তমানে উপলভ্য নই'}</Badge></div>
       <p className="text-sm text-gray-600 mt-1">রক্তদান: {d.donations || 0} বার</p>
-      <a className="btn-blood w-full text-center mt-3 !py-2.5 inline-flex items-center justify-center gap-2" href={telLink(d.phone)}><Icon name="phone" className="w-4 h-4" />যোগাযোগ করুন</a>
+      {d.phone
+        ? <a className="btn-blood w-full text-center mt-3 !py-2.5 inline-flex items-center justify-center gap-2" href={telLink(d.phone)}><Icon name="phone" className="w-4 h-4" />যোগাযোগ করুন</a>
+        : <a className="btn-blood w-full text-center mt-3 !py-2.5 inline-flex items-center justify-center gap-2" href="/dashboard/messages"><Icon name="chat" className="w-4 h-4" />মেসেজ করুন</a>}
     </Card>
   );
 }

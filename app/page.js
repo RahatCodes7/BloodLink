@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { store, ensureSeed } from '@/lib/store';
+import { fetchFeed, fetchCampaigns } from '@/lib/api';
 import { BLOOD_GROUPS } from '@/lib/constants';
 import { DIVISIONS } from '@/lib/locations';
 import BloodGroupSelector from '@/components/BloodGroupSelector';
@@ -38,8 +39,16 @@ export default function Home() {
 
   useEffect(() => {
     ensureSeed();
-    const t = setTimeout(() => { setFeed(store.getRequests().filter(r => r.status === 'ACTIVE').slice(0, 6)); setCamps(store.getCampaigns().slice(0, 2)); }, 400);
-    return () => clearTimeout(t);
+    let live = true;
+    (async () => {
+      try {
+        const [feed, camps] = await Promise.all([fetchFeed(6), fetchCampaigns()]);
+        if (live) { setFeed(feed.filter(r => r.status === 'ACTIVE')); setCamps(camps.slice(0, 2)); }
+      } catch {
+        if (live) { setFeed(store.getRequests().filter(r => r.status === 'ACTIVE').slice(0, 6)); setCamps(store.getCampaigns().slice(0, 2)); }
+      }
+    })();
+    return () => { live = false; };
   }, []);
 
   function goSearch() {

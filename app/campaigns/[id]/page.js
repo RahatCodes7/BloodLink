@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { store, ensureSeed } from '@/lib/store';
+import { fetchCampaign } from '@/lib/api';
 import { divName, disName, upaName } from '@/lib/locations';
 import { telLink, waLink } from '@/lib/utils';
 import { Card, EmptyState } from '@/components/ui';
@@ -10,7 +11,15 @@ import { FlatIcon } from '@/components/icons';
 export default function CampaignDetails() {
   const { id } = useParams();
   const [c, setC] = useState(undefined);
-  useEffect(() => { ensureSeed(); setC(store.getCampaigns().find(x => String(x.id) === String(id)) || null); }, [id]);
+  useEffect(() => {
+    ensureSeed();
+    let live = true;
+    (async () => {
+      try { const row = await fetchCampaign(id); if (live) setC(row); }
+      catch { if (live) setC(store.getCampaigns().find(x => String(x.id) === String(id)) || null); }
+    })();
+    return () => { live = false; };
+  }, [id]);
   if (c === null) return <div className="pt-6"><EmptyState title="ক্যাম্পেইন পাওয়া যায়নি।" icon="blood-trio.png" /></div>;
   if (!c) return <div className="pt-6">লোড হচ্ছে...</div>;
   return (

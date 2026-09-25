@@ -1,14 +1,30 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Shell from '../layout';
-import { Card, Badge } from '@/components/ui';
-const users = [
-  { name: 'রহিম উদ্দিন', email: 'rahim@example.com', phone: '01711111111', bg: 'O+', loc: 'খুলনা', status: 'সক্রিয়', date: '২০২৬-০১-১২' },
-  { name: 'ফাতেমা খাতুন', email: 'fatema@example.com', phone: '01722222222', bg: 'B+', loc: 'ঢাকা', status: 'সক্রিয়', date: '২০২৬-০৩-০২' },
-  { name: 'সাকিব হাসান', email: 'sakib@example.com', phone: '01733333333', bg: 'A-', loc: 'চট্টগ্রাম', status: 'স্থগিত', date: '২০২৫-১১-২০' }
-];
+import { Card, Badge, EmptyState } from '@/components/ui';
+
+// DB-driven: public users API এখনো নেই, তাই অনুরোধকারীদের তালিকা দেখায়।
+// Full user-list API পরে যোগ হবে।
 export default function AdminUsers() {
-  return <Shell title="ব্যবহারকারী ব্যবস্থাপনা"><div className="space-y-2">{users.map(u => (
-    <Card key={u.email}><div className="flex justify-between"><p className="font-bold">{u.name}</p><Badge tone={u.status === 'সক্রিয়' ? 'green' : 'orange'}>{u.status}</Badge></div>
-      <p className="text-xs text-gray-500">{u.email} • {u.phone} • {u.bg} • {u.loc} • {u.date}</p>
-      <div className="flex flex-wrap gap-1.5 mt-2">{['প্রোফাইল দেখুন', 'যাচাই করুন', 'স্থগিত করুন', 'নিষিদ্ধ করুন', 'পুনরায় সক্রিয় করুন'].map(a => <button key={a} className="text-xs font-bold bg-gray-100 rounded-lg px-3 py-1.5">{a}</button>)}</div></Card>))}</div></Shell>;
+  const [rows, setRows] = useState(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const [rq, dn] = await Promise.all([
+          fetch('/api/blood-requests?limit=50').then(r => r.json()),
+          fetch('/api/donors?limit=50').then(r => r.json())
+        ]);
+        const map = {};
+        (rq.data || []).forEach(r => { if (r.requester_id) map[r.requester_id] = { id: r.requester_id, requests: 0, src: 'অনুরোধকারী' }; });
+        (rq.data || []).forEach(r => { if (r.requester_id && map[r.requester_id]) map[r.requester_id].requests++; });
+        setRows(Object.values(map));
+      } catch { setRows([]); }
+    })();
+  }, []);
+  if (rows === null) return <Shell title="ব্যবহারকারী ব্যবস্থাপনা"><p className="text-sm text-gray-400">লোড হচ্ছে...</p></Shell>;
+  if (!rows.length) return <Shell title="ব্যবহারকারী ব্যবস্থাপনা"><EmptyState title="এখনো কোনো ব্যবহারকারী কার্যক্রম নেই।" hint="কেউ অনুরোধ করলে এখানে দেখা যাবে।" icon="blood-badge.png" /></Shell>;
+  return <Shell title="ব্যবহারকারী ব্যবস্থাপনা"><div className="space-y-2">{rows.map(u => (
+    <Card key={u.id}><div className="flex justify-between"><p className="font-bold font-mono text-xs">{u.id.slice(0, 8)}…</p><Badge tone="green">{u.src}</Badge></div>
+      <p className="text-xs text-gray-500">সক্রিয় অনুরোধ: {u.requests}</p>
+      <div className="flex flex-wrap gap-1.5 mt-2">{['প্রোফাইল দেখুন', 'যাচাই করুন', 'স্থগিত করুন'].map(a => <button key={a} className="text-xs font-bold bg-gray-100 rounded-lg px-3 py-1.5">{a}</button>)}</div></Card>))}</div></Shell>;
 }

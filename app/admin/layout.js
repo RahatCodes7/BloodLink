@@ -26,12 +26,25 @@ export function AdminStats() {
   const [s, setS] = useState(null);
   useEffect(() => {
     ensureSeed();
-    const reqs = store.getRequests();
-    setS({
-      today: reqs.length, active: reqs.filter(r => r.status === 'ACTIVE').length,
-      fulfilled: reqs.filter(r => r.status === 'FULFILLED').length, review: 0,
-      users: 1824, donors: store.getDonors().length, reports: store.getReports().length
-    });
+    (async () => {
+      // আসল DB সংখ্যা (ব্যর্থ হলে local fallback):
+      let reqs = null, donors = null;
+      try {
+        const [r1, r2] = await Promise.all([
+          fetch('/api/blood-requests?limit=50').then(r => r.json()),
+          fetch('/api/donors?limit=50').then(r => r.json())
+        ]);
+        if (r1.ok) reqs = r1.data; if (r2.ok) donors = r2.data;
+      } catch {}
+      reqs = reqs || store.getRequests();
+      donors = donors || store.getDonors();
+      const owners = new Set(reqs.map(r => r.requester_id).filter(Boolean));
+      setS({
+        today: reqs.length, active: reqs.filter(r => r.status === 'ACTIVE').length,
+        fulfilled: reqs.filter(r => r.status === 'FULFILLED').length, review: reqs.filter(r => r.status === 'PENDING_REVIEW').length,
+        users: owners.size, donors: donors.length, reports: store.getReports().length
+      });
+    })();
   }, []);
   if (!s) return null;
   const cards = [['আজকের অনুরোধ', s.today], ['সক্রিয় অনুরোধ', s.active], ['আজ পূরণ হয়েছে', s.fulfilled], ['পর্যালোচনায়', s.review], ['মোট ব্যবহারকারী', s.users], ['মোট রক্তদাতা', s.donors], ['রিপোর্ট', s.reports]];

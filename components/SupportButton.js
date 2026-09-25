@@ -4,7 +4,7 @@ import { SUPPORT, COSTS } from '@/lib/support';
 import { Modal } from './ui';
 import Icon from './icons';
 
-// ভাসমান "সাপোর্ট করুন" বাটন + ডোনেশন মোডাল (bKash/নগদ/রকেট + BuyMeACoffee)
+// ভাসমান "পাশে থাকুন" বাটন + ডোনেশন মোডাল (bKash/নগদ)
 export default function SupportButton() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState('');
@@ -13,7 +13,7 @@ export default function SupportButton() {
     setCopied(tag);
     setTimeout(() => setCopied(''), 1800);
   }
-  const methods = [['bKash', SUPPORT.bkash, 'text-pink-600'], ['Nagad', SUPPORT.nagad, 'text-orange-500'], ['Rocket', SUPPORT.rocket, 'text-purple-600']];
+  const methods = [['bKash', SUPPORT.bkash, 'text-pink-600'], ['নগদ', SUPPORT.nagad, 'text-orange-500']];
   return (
     <>
       <button onClick={() => setOpen(true)} aria-label="BloodLink-এর পাশে থাকুন"
@@ -37,9 +37,6 @@ export default function SupportButton() {
             </div>
           ))}
         </div>
-        <a href={SUPPORT.buyMeACoffee} target="_blank" rel="noreferrer" className="btn-blood w-full text-center !py-2.5 !bg-yellow-500 hover:!bg-yellow-600 block">
-          ☕ Buy Me a Coffee
-        </a>
         <p className="text-[11px] text-gray-400 mt-2 text-center">{SUPPORT.bdtNote}</p>
       </Modal>
     </>

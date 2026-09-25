@@ -73,7 +73,7 @@ export default function Header() {
               {unread > 0 && <span className="absolute -top-0.5 -right-0.5 bg-blood-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pop-in">{unread}</span>}
             </button>
             {openMenu === 'bell' && (
-              <div className="absolute right-0 mt-2 w-80 max-w-[85vw] bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden animate-pop-in z-50">
+              <div className="fixed left-4 right-4 top-[68px] md:absolute md:left-auto md:right-0 md:top-auto md:mt-2 md:w-80 bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden animate-pop-in z-50">
                 <p className="font-extrabold px-4 pt-3 pb-1">নোটিফিকেশন {unread > 0 && <span className="text-blood-600">({unread} নতুন)</span>}</p>
                 <div className="max-h-72 overflow-y-auto">
                   {notifs.length === 0 && <p className="text-sm text-gray-400 px-4 py-4 text-center">নতুন কোনো নোটিফিকেশন নেই।</p>}
