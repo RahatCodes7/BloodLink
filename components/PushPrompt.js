@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { pushSupported, pushPermission, enablePush, wasPushEnabled, dismissPushPrompt, pushPromptSnoozed } from '@/lib/push';
+import { pushSupported, pushPermission, enablePush, wasPushEnabled } from '@/lib/push';
 import Icon from './icons';
 
 // সাইটে ঢুকলে নোটিফিকেশন ON করতে বলা — জরুরি রক্তের খবর ফোনে পেতে
@@ -15,7 +15,7 @@ export default function PushPrompt() {
     let force = false;
     try { force = new URLSearchParams(window.location.search).get('push') === 'test'; } catch {}
     if (!force) {
-      if (wasPushEnabled() || pushPromptSnoozed()) return;
+      if (wasPushEnabled()) return;
       if (pushPermission() !== 'default') return;
     }
     const t = setTimeout(() => setShow(true), 2500); // ২.৫s পর ভদ্রভাবে জিজ্ঞেস
@@ -32,7 +32,8 @@ export default function PushPrompt() {
     }
     setBusy(false);
   }
-  function later() { dismissPushPrompt(); setShow(false); }
+  // "পরে" = শুধু এবারের মতো বন্ধ; রিফ্রেশ/নতুন ভিজিটে আবার আসবে
+  function later() { setShow(false); }
 
   if (!show) return null;
   return (
