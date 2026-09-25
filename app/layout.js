@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import ProgressBar from '@/components/ProgressBar';
 import SupportButton from '@/components/SupportButton';
 import PushPrompt from '@/components/PushPrompt';
-import InstallPrompt from '@/components/InstallPrompt';
+import InstallPrompt, { InstallButton } from '@/components/InstallPrompt';
 
 export const metadata = {
   title: 'BloodLink — রক্ত খুঁজুন। জীবন বাঁচান।',
@@ -28,6 +28,7 @@ export default function RootLayout({ children }) {
         <SupportButton />
         <PushPrompt />
         <InstallPrompt />
+        <InstallButton />
       </body>
     </html>
   );

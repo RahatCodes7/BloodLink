@@ -2,6 +2,73 @@
 import { useEffect, useState } from 'react';
 import Icon from './icons';
 
+function isInstalled() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+// সাইডে সবসময় থাকা "অ্যাপ" বাটন — prompt না এলেও ইনস্টল করা যায়; ইনস্টলের পর গায়েব
+export function InstallButton() {
+  const [deferred, setDeferred] = useState(null);
+  const [gone, setGone] = useState(true);
+  const [help, setHelp] = useState(false);
+
+  useEffect(() => {
+    try { if (localStorage.getItem('bl_installed')) return; } catch {}
+    if (isInstalled()) return;
+    setGone(false);
+    const onPrompt = (e) => { e.preventDefault(); setDeferred(e); };
+    const onInstalled = () => {
+      try { localStorage.setItem('bl_installed', '1'); } catch {}
+      setGone(true);
+    };
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  async function go() {
+    if (deferred) {
+      deferred.prompt();
+      const { outcome } = await deferred.userChoice.catch(() => ({ outcome: 'dismissed' }));
+      if (outcome === 'accepted') {
+        try { localStorage.setItem('bl_installed', '1'); } catch {}
+        setGone(true);
+      }
+      setDeferred(null);
+      return;
+    }
+    setHelp(true); // prompt unavailable (in-app browser/iOS) → manual নির্দেশনা
+  }
+
+  if (gone) return null;
+  return (
+    <>
+      <button onClick={go} aria-label="অ্যাপ ইনস্টল করুন"
+        className="fixed bottom-20 md:bottom-6 left-4 z-40 flex items-center gap-2 bg-gray-900 text-white font-bold text-sm pl-3 pr-4 py-2.5 rounded-full shadow-soft hover:scale-105 active:scale-95 transition">
+        <Icon name="plus" className="w-5 h-5" />
+        <span className="hidden sm:inline">অ্যাপ নিন</span>
+      </button>
+      {help && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={() => setHelp(false)}>
+          <div className="bg-white w-full sm:max-w-sm rounded-2xl p-5 animate-pop-in" onClick={e => e.stopPropagation()}>
+            <p className="font-extrabold mb-2">📲 অ্যাপ ইনস্টল করুন</p>
+            <ul className="text-sm text-gray-600 space-y-1.5 list-disc ml-5">
+              <li><b>Chrome:</b> মেনু (⋮) → <b>Add to Home screen</b> / <b>Install app</b></li>
+              <li><b>iPhone (Safari):</b> Share → <b>Add to Home Screen</b></li>
+              <li>Facebook/Messenger-এর ভেতর খুলে থাকলে লিংক কপি করে Chrome/Safari-তে খুলুন</li>
+            </ul>
+            <button onClick={() => setHelp(false)} className="btn-blood w-full mt-3 !py-2.5">বুঝেছি</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // PWA install prompt — Android/Chrome: beforeinstallprompt; iPhone: manual নির্দেশনা
 export default function InstallPrompt() {
   const [deferred, setDeferred] = useState(null);
