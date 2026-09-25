@@ -1,16 +1,34 @@
 import Link from 'next/link';
+
+const cols = [
+  ['প্ল্যাটফর্ম', [['রক্ত খুঁজুন', '/search'], ['রক্তদাতা', '/donors'], ['রক্তের অনুরোধ', '/request-new'], ['সকল আবেদন', '/requests'], ['ক্যাম্পেইন', '/campaigns'], ['সামঞ্জস্য চার্ট', '/compatibility']]],
+  ['জানুন', [['আমাদের সম্পর্কে', '/about'], ['সাহায্য / FAQ', '/faq'], ['যোগাযোগ', '/contact']]],
+  ['নিয়ম', [['শর্তাবলি', '/terms'], ['প্রাইভেসি নীতি', '/privacy']]]
+];
+
 export default function Footer() {
   return (
     <footer className="mt-12 bg-white border-t">
-      <div className="max-w-6xl mx-auto px-4 py-8 grid sm:grid-cols-3 gap-6 text-sm">
-        <div><p className="font-extrabold text-blood-700">🩸 BloodLink</p><p className="text-gray-500 mt-1">জীবনের প্রয়োজনে, রক্তের বন্ধনে</p>
-        <p className="text-xs text-gray-400 mt-2">BloodLink হাসপাতাল বা ব্লাড ব্যাংকের বিকল্প নয়।</p></div>
-        <nav className="flex flex-col gap-1.5 font-semibold" aria-label="ফুটার">
-          <Link href="/about">আমাদের সম্পর্কে</Link><Link href="/requests">সকল আবেদন</Link><Link href="/campaigns">রক্তদান ক্যাম্পেইন</Link><Link href="/compatibility">সামঞ্জস্য চার্ট</Link><Link href="/faq">সাহায্য / FAQ</Link><Link href="/contact">যোগাযোগ</Link>
-          <Link href="/privacy">প্রাইভেসি</Link><Link href="/terms">শর্তাবলি</Link>
-        </nav>
-        <div className="text-gray-500"><p className="font-bold text-gray-700 mb-1">জরুরি?</p><p>রক্ত খুঁজতে <Link className="text-blood-700 font-bold" href="/search">এখানে ক্লিক করুন</Link> অথবা নিকটস্থ হাসপাতালের জরুরি বিভাগে যোগাযোগ করুন।</p>
-        <p className="text-[11px] text-gray-400 mt-3">Icons by <a className="underline" href="https://www.flaticon.com/" target="_blank" rel="noreferrer">Flaticon</a> (Freepik, wanicon, Vector Stall) + <a className="underline" href="https://openmoji.org/" target="_blank" rel="noreferrer">OpenMoji</a></p></div>
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <p className="font-extrabold text-blood-700 text-lg">🩸 BloodLink</p>
+          <p className="text-gray-500 text-sm mt-0.5">জীবনের প্রয়োজনে, রক্তের বন্ধনে</p>
+          <p className="text-xs text-gray-400 mt-2 leading-relaxed">BloodLink একটি কমিউনিটি সংযোগ প্ল্যাটফর্ম — হাসপাতাল বা ব্লাড ব্যাংকের বিকল্প নয়। রক্তদানের আগে চিকিৎসকের নির্দেশনা নিন।</p>
+        </div>
+        {cols.map(([t, links]) => (
+          <nav key={t} aria-label={t}>
+            <p className="font-extrabold text-sm mb-2">{t}</p>
+            <ul className="space-y-1.5 text-sm font-semibold text-gray-600">
+              {links.map(([l, h]) => <li key={h + l}><Link href={h} className="hover:text-blood-700 transition">{l}</Link></li>)}
+            </ul>
+          </nav>
+        ))}
+      </div>
+      <div className="border-t">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-xs text-gray-400">
+          <p>© {new Date().getFullYear().toLocaleString('bn-BD', { useGrouping: false })} BloodLink • সর্বস্বত্ব সংরক্ষিত • 🇧🇩 ভালোবাসায় তৈরি</p>
+          <p>Icons: <a className="underline" href="https://www.flaticon.com/" target="_blank" rel="noreferrer">Flaticon</a> + <a className="underline" href="https://openmoji.org/" target="_blank" rel="noreferrer">OpenMoji</a></p>
+        </div>
       </div>
     </footer>
   );

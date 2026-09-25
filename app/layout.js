@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
         <ProgressBar />
         <Header />
         <main className="max-w-6xl mx-auto px-4 pb-24 md:pb-8 min-h-[70vh]">{children}</main>
-        <div className="hidden md:block"><Footer /></div>
+        <div className="pb-20 md:pb-0"><Footer /></div>
         <BottomNav />
         <SupportButton />
         <PushPrompt />
