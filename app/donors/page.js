@@ -11,18 +11,20 @@ import { Card, EmptyState, Skeleton } from '@/components/ui';
 export default function Donors() {
   const [bg, setBg] = useState('');
   const [loc, setLoc] = useState({ division: '', district: '', upazila: '' });
-  const [onlyAvail, setOnlyAvail] = useState(true);
+  const [onlyAvail, setOnlyAvail] = useState(false);
   const [all, setAll] = useState(null);
   useEffect(() => {
     ensureSeed();
     let live = true;
     (async () => {
-      try { const rows = await fetchDonors(); if (live) setAll(rows); }
+      try { const rows = await fetchDonors({ availableOnly: false }); if (live) setAll(rows); }
       catch { if (live) setAll(store.getDonors()); }
     })();
     return () => { live = false; };
   }, []);
-  const list = (all || []).filter(d => (!bg || d.blood_group === bg) && (!loc.district || d.district_id === loc.district) && (!onlyAvail || d.available));
+  const list = (all || [])
+    .filter(d => (!bg || d.blood_group === bg) && (!loc.district || d.district_id === loc.district) && (!loc.upazila || (d.upazila_id || '') === loc.upazila) && (!onlyAvail || d.available))
+    .sort((a, b) => Number(b.available || false) - Number(a.available || false) || (b.donations || 0) - (a.donations || 0));
   return (
     <div className="pt-4 space-y-4">
       <h1 className="text-2xl font-extrabold">রক্তদাতা খুঁজুন</h1>
@@ -46,8 +48,18 @@ export default function Donors() {
         <label className="flex items-center gap-2 text-sm font-bold mt-1"><input type="checkbox" checked={onlyAvail} onChange={e => setOnlyAvail(e.target.checked)} className="w-5 h-5 accent-red-600" />শুধু উপলভ্য দাতা</label>
       </Card>
       {!all ? <div className="grid sm:grid-cols-2 gap-3">{[1, 2].map(i => <Skeleton key={i} />)}</div>
-      : list.length === 0 ? <EmptyState title="কোনো রক্তদাতা পাওয়া যায়নি।" hint="অন্য গ্রুপ বা এলাকা দিয়ে চেষ্টা করুন।" />
-      : <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{list.map(d => <DonorCard key={d.id} d={d} />)}</div>}
+      : list.length === 0 ? (
+        (all || []).length === 0
+          ? <Card className="text-center py-8">
+              <p className="font-extrabold">এখনো কোনো রক্তদাতা নিবন্ধন করেননি।</p>
+              <p className="text-sm text-gray-500 mt-1 mb-3">প্রথম রক্তদাতা হয়ে এগিয়ে আসুন ❤️</p>
+              <Link href="/become-donor" className="btn-blood !w-auto inline-block">রক্তদাতা হন</Link>
+            </Card>
+          : <EmptyState title="এই ফিল্টারে কোনো রক্তদাতা পাওয়া যায়নি।" hint="অন্য গ্রুপ বা এলাকা দিয়ে চেষ্টা করুন।" />
+      ) : <>
+        <p className="text-sm font-bold text-gray-600">🩸 মোট <span className="text-blood-700">{list.length.toLocaleString('bn-BD')} জন</span> রক্তদাতা পাওয়া গেছে</p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{list.map(d => <DonorCard key={d.id} d={d} />)}</div>
+      </>}
       <p className="text-xs text-gray-400">⚕️ BloodLink চিকিৎসাগত উপযুক্ততা নির্ধারণ করে না — সিদ্ধান্ত চিকিৎসকের।</p>
     </div>
   );
