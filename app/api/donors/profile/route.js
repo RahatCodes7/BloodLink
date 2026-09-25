@@ -19,6 +19,7 @@ export async function POST(req) {
     });
     return NextResponse.json({ ok: true, data: { id: row.id } }, { status: 201 });
   } catch (e) {
+    console.error('[api/donors/profile]', e.status || 500, e.message);
     return fail(e.status || 500, e.status ? e.message : 'দুঃখিত, অনুরোধটি সম্পন্ন করা যায়নি।');
   }
 }
