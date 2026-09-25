@@ -27,15 +27,31 @@ export default function NewRequest() {
     if (step === 5 && !isValidBDPhone(f.phone)) return say('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)।');
     setStep(s => Math.min(s + 1, 7));
   }
-  function publish() {
+  async function publish() {
     if (!f.agree) return say('অনুগ্রহ করে নিশ্চিত করুন যে তথ্য সত্য।');
     setPublishing(true);
-    const id = Math.random().toString(36).slice(2, 7).toUpperCase();
     const hosp = hospName(f.hospital) || f.customPlace || 'অন্যান্য স্থান';
+    const payload = {
+      blood_group: f.blood, bags_required: f.bags, urgency: String(f.urgency || 'urgent').toUpperCase(),
+      required_date: f.date, required_time: f.time || null,
+      division_id: f.division, district_id: f.district, upazila_id: f.upazila || null,
+      location_text: hosp, description: (f.desc || '').slice(0, 500),
+      contact_phone: f.phone.trim(), whatsapp_available: f.wa
+    };
+    let id = null;
+    try {
+      const r = await fetch('/api/blood-requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'প্রকাশ ব্যর্থ');
+      id = j.data.id;
+    } catch (e) {
+      // DB/API না থাকলে local fallback (demo):
+      if (String(e.message).includes('Failed to fetch') || String(e.message).includes('DATABASE_URL')) id = Math.random().toString(36).slice(2, 7).toUpperCase();
+      else { setPublishing(false); say(e.message); return; }
+    }
     const r = { id, blood_group: f.blood, bags_required: f.bags, bags_fulfilled: 0, urgency: f.urgency, division_id: f.division, district_id: f.district, upazila_id: f.upazila, hospital: hosp, location_text: hosp, required_date: f.date, required_time: f.time, description: f.desc.slice(0, 500), contact_phone: f.phone, whatsapp_enabled: f.wa, status: 'ACTIVE', verified_requester: true, created_at: new Date().toISOString() };
     store.addRequest(r);
     store.pushNotif({ title: '✓ অনুরোধ প্রকাশ হয়েছে', message: `${r.blood_group} • ${r.bags_required} ব্যাগ • ${hosp}`, ref: r.id });
-    // ম্যাচিং: একই গ্রুপের ডোনারদের জন্য নোটিফিকেশন (ডেমো)
     say('✓ আপনার রক্তের অনুরোধ সফলভাবে প্রকাশ হয়েছে।');
     setTimeout(() => router.push('/request/' + id), 900);
   }

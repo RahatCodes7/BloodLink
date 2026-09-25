@@ -16,13 +16,27 @@ export default function BecomeDonor() {
   const [f, setF] = useState({ name: '', phone: '', wa: true, blood: 'O+', division: '', district: '', upazila: '', available: true, last: '' });
   useEffect(() => { ensureSeed(); const u = store.getUser(); if (u) setF(v => ({ ...v, name: u.name || '', phone: u.phone || '' })); }, []);
   function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     if (!store.getUser()) { router.push('/login'); return; }
     if (f.name.trim().length < 3) return say('সঠিক নাম দিন।');
     if (!isValidBDPhone(f.phone)) return say('সঠিক ফোন নম্বর দিন।');
     if (!f.blood || !f.district) return say('গ্রুপ ও জেলা নির্বাচন করুন।');
     setLoading(true);
+    try {
+      const r = await fetch('/api/donors/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blood_group: f.blood, division_id: f.division || null, district_id: f.district,
+          upazila_id: f.upazila || null, availability_status: f.available ? 'AVAILABLE' : 'UNAVAILABLE',
+          emergency_available: true, contact_preference: 'contact', phone: f.phone.trim()
+        }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'প্রোফাইল তৈরি ব্যর্থ');
+    } catch (err) {
+      const noDb = String(err.message).includes('Failed to fetch') || String(err.message).includes('DATABASE_URL');
+      if (!noDb) { setLoading(false); say(err.message); return; }
+      // DB না থাকলে local fallback (demo)
+    }
     store.addDonor({ id: 'd' + Date.now(), name: f.name, phone: f.phone, blood_group: f.blood, division_id: f.division, district_id: f.district, available: f.available, donations: 0, last_donation: f.last });
     say('✓ রক্তদাতা প্রোফাইল তৈরি হয়েছে!');
     setTimeout(() => router.push('/donors'), 900);
