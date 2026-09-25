@@ -46,6 +46,20 @@ async function createRequest(user, input) {
       }).catch(() => {});
     }
   } catch {}
+  // জরুরি/অত্যন্ত জরুরি → সবার ফোনে Web Push broadcast (সাইট বন্ধ থাকলেও):
+  if (row.urgency === 'URGENT' || row.urgency === 'CRITICAL') {
+    try {
+      const { broadcast } = require('./push');
+      const { query } = require('../lib/db/client');
+      const dn = await query('SELECT name_bn FROM districts WHERE id=$1', [row.district_id]).catch(() => null);
+      const dist = (dn && dn.rows[0] && dn.rows[0].name_bn) || 'আপনার এলাকায়';
+      broadcast({
+        title: `🚨 জরুরি রক্ত প্রয়োজন (${row.blood_group})`,
+        body: `${dist} — ${row.bags_required} ব্যাগ ${row.blood_group} রক্ত লাগবে। বিস্তারিত দেখুন।`,
+        url: `/request/${row.id}`
+      }).catch(() => {});
+    } catch {}
+  }
   return row;
 }
 

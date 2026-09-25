@@ -4,6 +4,7 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import ProgressBar from '@/components/ProgressBar';
 import SupportButton from '@/components/SupportButton';
+import PushPrompt from '@/components/PushPrompt';
 
 export const metadata = {
   title: 'BloodLink — রক্ত খুঁজুন। জীবন বাঁচান।',
@@ -24,6 +25,7 @@ export default function RootLayout({ children }) {
         <div className="hidden md:block"><Footer /></div>
         <BottomNav />
         <SupportButton />
+        <PushPrompt />
       </body>
     </html>
   );
