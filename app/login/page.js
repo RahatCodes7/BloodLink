@@ -13,7 +13,7 @@ function Field({ icon, label, ...p }) {
       <span className="label">{label}</span>
       <span className="relative block">
         <Icon name={icon} className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        <input className="input !pl-11" {...p} />
+        <input className="input !pl-11 !py-3.5 md:!py-3" {...p} />
       </span>
     </label>
   );
@@ -25,9 +25,11 @@ export default function Login() {
   const [pass, setPass] = useState('');
   const [show, setShow] = useState(false);
   const [toast, setToast] = useState('');
+  const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
 
   function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }
+  function fail(m) { setErr(m); setTimeout(() => setErr(''), 2600); }
   function demoLogin() {
     ensureSeed();
     store.setUser({ name: email.split('@')[0] || 'ব্যবহারকারী', email, phone: '01700000000', blood_group: 'O+', division_id: 'dhaka', district_id: 'dhaka-d', upazila_id: 'mirpur' });
@@ -35,7 +37,8 @@ export default function Login() {
   }
   async function submit(e) {
     e.preventDefault();
-    if (!email || pass.length < 4) return say('সঠিক ইমেইল ও পাসওয়ার্ড দিন।');
+    setErr('');
+    if (!email || pass.length < 4) return fail('সঠিক ইমেইল ও পাসওয়ার্ড দিন।');
     setLoading(true);
     try {
       const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
@@ -46,7 +49,7 @@ export default function Login() {
       router.push('/dashboard');
     } catch (err) {
       if (String(err.message).includes('Failed to fetch')) { demoLogin(); return; }
-      say(err.message); setLoading(false);
+      fail(err.message); setLoading(false);
     }
   }
 
@@ -72,17 +75,21 @@ export default function Login() {
             </ul>
           </div>
           {/* ফর্ম */}
-          <div className="p-6 sm:p-8">
-            <div className="md:hidden flex justify-center mb-2"><FlatIcon src="blood-hero.png" alt="" className="w-16 h-16 animate-floaty-sm" /></div>
-            <h1 className="text-2xl font-extrabold text-center md:text-left">লগইন</h1>
-            <p className="text-sm text-gray-500 mb-5 text-center md:text-left">আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+          <div className="p-5 sm:p-8">
+            <div className="md:hidden flex items-center justify-center gap-2 mb-3">
+              <FlatIcon src="blood-hero.png" alt="" className="w-11 h-11" />
+              <div className="text-left"><p className="font-extrabold text-blood-700 leading-none">BloodLink</p><p className="text-[11px] text-gray-400">জীবনের প্রয়োজনে, রক্তের বন্ধনে</p></div>
+            </div>
+            <h1 className="text-[22px] sm:text-2xl font-extrabold text-center md:text-left">লগইন</h1>
+            <p className="text-sm text-gray-500 mb-4 text-center md:text-left">আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+            {err && <p className="animate-pop-in text-sm font-bold text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-3">{err}</p>}
             <form onSubmit={submit}>
               <Field icon="user" label="ইমেইল" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
               <label className="block mb-4">
                 <span className="label">পাসওয়ার্ড</span>
                 <span className="relative block">
                   <Icon name="clip" className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  <input className="input !pl-11 !pr-16" type={show ? 'text' : 'password'} required value={pass} onChange={e => setPass(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
+                  <input className="input !pl-11 !pr-16 !py-3.5 md:!py-3" type={show ? 'text' : 'password'} required value={pass} onChange={e => setPass(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
                   <button type="button" onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-blood-700">{show ? 'লুকান' : 'দেখুন'}</button>
                 </span>
               </label>

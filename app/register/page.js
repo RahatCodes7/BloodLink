@@ -15,7 +15,7 @@ function Field({ icon, label, children, ...p }) {
       <span className="label">{label}</span>
       <span className="relative block">
         <Icon name={icon} className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        {children || <input className="input !pl-11" {...p} />}
+        {children || <input className="input !pl-11 !py-3.5 md:!py-3" {...p} />}
       </span>
     </label>
   );
@@ -28,16 +28,19 @@ export default function Register() {
   const [f, setF] = useState({ name: '', email: '', phone: '', blood: 'O+', pass: '' });
   const [show, setShow] = useState(false);
   const [toast, setToast] = useState('');
+  const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const done = [f.name.trim().length >= 3, isValidBDPhone(f.phone) && /.+@.+\..+/.test(f.email), f.blood && f.pass.length >= 6].filter(Boolean).length;
 
   function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }
+  function fail(m) { setErr(m); setTimeout(() => setErr(''), 2600); }
   async function submit(e) {
     e.preventDefault();
-    if (f.name.trim().length < 3) return say('সঠিক নাম লিখুন।');
-    if (!/.+@.+\..+/.test(f.email)) return say('সঠিক ইমেইল দিন।');
-    if (!isValidBDPhone(f.phone)) return say('সঠিক বাংলাদেশি মোবাইল নম্বর দিন (01XXXXXXXXX)।');
-    if (f.pass.length < 6) return say('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।');
+    setErr('');
+    if (f.name.trim().length < 3) return fail('সঠিক নাম লিখুন।');
+    if (!/.+@.+\..+/.test(f.email)) return fail('সঠিক ইমেইল দিন।');
+    if (!isValidBDPhone(f.phone)) return fail('সঠিক মোবাইল নম্বর দিন (01XXXXXXXXX)।');
+    if (f.pass.length < 6) return fail('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।');
     setLoading(true);
     try {
       const r = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -56,7 +59,7 @@ export default function Register() {
         setTimeout(() => router.push('/dashboard'), 800);
         return;
       }
-      say(err.message); setLoading(false);
+      fail(err.message); setLoading(false);
     }
   }
   const set = k => e => setF({ ...f, [k]: e.target.value });
@@ -87,10 +90,18 @@ export default function Register() {
             </div>
           </div>
           {/* ফর্ম */}
-          <div className="p-6 sm:p-8">
-            <div className="md:hidden flex justify-center mb-2"><FlatIcon src="donor-hands.png" alt="" className="w-16 h-16 animate-floaty-sm" /></div>
-            <h1 className="text-2xl font-extrabold text-center md:text-left">নিবন্ধন</h1>
-            <p className="text-sm text-gray-500 mb-5 text-center md:text-left">বিনামূল্যে অ্যাকাউন্ট খুলুন</p>
+          <div className="p-5 sm:p-8">
+            <div className="md:hidden flex items-center justify-center gap-2 mb-2">
+              <FlatIcon src="donor-hands.png" alt="" className="w-11 h-11" />
+              <div className="text-left"><p className="font-extrabold text-blood-700 leading-none">BloodLink</p><p className="text-[11px] text-gray-400">১ মিনিটে যুক্ত হোন ❤️</p></div>
+            </div>
+            <h1 className="text-[22px] sm:text-2xl font-extrabold text-center md:text-left">নিবন্ধন</h1>
+            {/* মোবাইল প্রগ্রেস ডট */}
+            <div className="md:hidden flex items-center gap-1.5 mt-2 mb-4" aria-hidden="true">
+              {[0, 1, 2].map(i => <span key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${done > i ? 'bg-green-500' : 'bg-gray-200'}`} />)}
+            </div>
+            <p className="hidden md:block text-sm text-gray-500 mb-5">বিনামূল্যে অ্যাকাউন্ট খুলুন</p>
+            {err && <p className="animate-pop-in text-sm font-bold text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-3">{err}</p>}
             <form onSubmit={submit}>
               <Field icon="user" label="আপনার নাম" required value={f.name} onChange={set('name')} placeholder="যেমন: রহিম উদ্দিন" autoComplete="name" />
               <div className="grid sm:grid-cols-2 gap-2">
@@ -102,7 +113,7 @@ export default function Register() {
                   <span className="label">রক্তের গ্রুপ</span>
                   <span className="relative block">
                     <Icon name="drop" className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-blood-500 pointer-events-none" />
-                    <select className="input !pl-11 font-bold text-blood-700" value={f.blood} onChange={set('blood')}>
+                    <select className="input !pl-11 !py-3.5 md:!py-3 font-bold text-blood-700" value={f.blood} onChange={set('blood')}>
                       {BLOOD_GROUPS.map(g => <option key={g}>{g}</option>)}
                     </select>
                   </span>
@@ -111,7 +122,7 @@ export default function Register() {
                   <span className="label">পাসওয়ার্ড</span>
                   <span className="relative block">
                     <Icon name="clip" className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                    <input className="input !pl-11 !pr-14" type={show ? 'text' : 'password'} required value={f.pass} onChange={set('pass')} placeholder="কমপক্ষে ৬ অক্ষর" autoComplete="new-password" />
+                    <input className="input !pl-11 !pr-14 !py-3.5 md:!py-3" type={show ? 'text' : 'password'} required value={f.pass} onChange={set('pass')} placeholder="কমপক্ষে ৬ অক্ষর" autoComplete="new-password" />
                     <button type="button" onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-blood-700">{show ? 'লুকান' : 'দেখুন'}</button>
                   </span>
                 </label>
