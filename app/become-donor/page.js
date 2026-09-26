@@ -28,7 +28,8 @@ export default function BecomeDonor() {
       const r = await fetch('/api/donors/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           blood_group: f.blood, division_id: f.division || null, district_id: f.district,
-          upazila_id: f.upazila || null, availability_status: f.available ? 'AVAILABLE' : 'UNAVAILABLE',
+          upazila_id: f.upazila || null, last_donation_date: f.last || null,
+          availability_status: f.available ? 'AVAILABLE' : 'UNAVAILABLE',
           emergency_available: true, contact_preference: 'contact', phone: f.phone.trim()
         }) });
       const j = await r.json();
