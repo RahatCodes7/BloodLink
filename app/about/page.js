@@ -19,6 +19,30 @@ const STEPS = [
   ['৪', 'ব্যবস্থা হলে জানান', '"রক্ত পাওয়া গেছে" চাপুন — তালিকা থেকে সরে যাবে।']
 ];
 
+// 👇 নিজের পোর্টফোলিও লিংক এখানে বসান
+const PORTFOLIO_URL = '#';
+const GITHUB_URL = 'https://github.com/RahatCodes7';
+
+const RULES = [
+  ['সত্য তথ্য দিন', 'ভুল গ্রুপ, ভুল নম্বর বা ভুল হাসপাতাল দেবেন না। ভুল তথ্যে জীবন-ঝুঁকি হতে পারে।'],
+  ['ভুয়া অনুরোধ নিষেধ', 'প্রয়োজন ছাড়া অনুরোধ করলে অ্যাকাউন্ট স্থগিত হবে।'],
+  ['টাকা চাওয়া/দেওয়া নিষেধ', 'রক্তের বিনিময়ে টাকা চাওয়া বা অগ্রিম দেওয়া সম্পূর্ণ নিষেধ — এমন দেখলে রিপোর্ট করুন।'],
+  ['হয়রানি নয়', 'ডোনার বা রোগীর সাথে খারাপ ব্যবহার, স্প্যাম বা বারবার ফোন নিষেধ।'],
+  ['প্রাইভেসি সম্মান করুন', 'কারো নম্বর অনুমতি ছাড়া ছড়িয়ে দেবেন না।'],
+  ['রিপোর্ট করুন', 'ভুয়া/সন্দেহজনক কিছু দেখলে ⚠️ রিপোর্ট বাটনে জানান।'],
+  ['অ্যাডমিন সিদ্ধান্ত চূড়ান্ত', 'নিয়ম ভাঙলে কনটেন্ট সরানো বা অ্যাকাউন্ট স্থগিত হতে পারে।']
+];
+
+const SCREENING = [
+  'কোনো নেশা বা মাদক সেবন করেন কি না',
+  'ধূমপান বা অ্যালকোহল সেবন করেন কি না',
+  'গত ৪ মাসের মধ্যে রক্ত দিয়েছেন কি না',
+  'বর্তমানে জ্বর, সর্দি বা কোনো অসুস্থতা আছে কি না',
+  'ডায়াবেটিস, প্রেশার, হেপাটাইটিস বা বড় কোনো রোগের ইতিহাস আছে কি না',
+  'নিয়মিত কোনো ওষুধ (বিশেষত অ্যান্টিবায়োটিক) খাচ্ছেন কি না',
+  'বয়স ১৮ বছরের বেশি এবং শারীরিকভাবে সুস্থ কি না'
+];
+
 export default function About() {
   const [stats, setStats] = useState({ donors: 0, requests: 0 });
   useEffect(() => {
@@ -88,6 +112,54 @@ export default function About() {
         <p className="font-extrabold mb-1">⚕️ মনে রাখুন</p>
         <p className="text-[13px]">BloodLink হাসপাতাল বা ব্লাড ব্যাংকের বিকল্প নয়। রক্তদানের আগে সংশ্লিষ্ট হাসপাতাল/ব্লাড ব্যাংক ও যোগ্য স্বাস্থ্যসেবা পেশাদারের নির্দেশনা অনুসরণ করুন। অপরিচিত নম্বরে অগ্রিম টাকা দেবেন না।</p>
       </div>
+
+      {/* SCREENING */}
+      <section>
+        <h2 className="font-extrabold text-xl mb-1">রক্ত নেওয়ার আগে ডোনারকে জিজ্ঞেস করুন</h2>
+        <p className="text-sm text-gray-500 mb-3">যোগাযোগের সময় ভদ্রভাবে এই প্রশ্নগুলো করুন — তবে এগুলো হাসপাতালের টেস্টের বিকল্প নয়।</p>
+        <Card>
+          <ul className="space-y-2">
+            {SCREENING.map((q, i) => (
+              <li key={q} className="flex gap-2.5 text-sm">
+                <span className="w-6 h-6 shrink-0 rounded-full bg-red-50 text-blood-700 text-xs font-extrabold flex items-center justify-center">{(i + 1).toLocaleString('bn-BD')}</span>
+                <span className="font-semibold text-gray-700">{q}?</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-red-600 font-bold mt-3 bg-red-50 rounded-xl p-2.5">⚠️ উত্তর যাই হোক, রক্ত দেওয়ার আগে হাসপাতাল/ব্লাড ব্যাংকের স্ক্রিনিং ও ক্রস-ম্যাচ বাধ্যতামূলক।</p>
+        </Card>
+      </section>
+
+      {/* RULES */}
+      <section>
+        <h2 className="font-extrabold text-xl mb-3">কমিউনিটি নিয়মাবলি</h2>
+        <div className="space-y-2.5">
+          {RULES.map(([t, d], i) => (
+            <Reveal key={t} delay={Math.min(i, 4) * 60}>
+              <Card className="flex gap-3 items-start">
+                <span className="w-9 h-9 shrink-0 rounded-xl bg-gray-900 text-white text-sm font-extrabold flex items-center justify-center">{(i + 1).toLocaleString('bn-BD')}</span>
+                <div><p className="font-bold">{t}</p><p className="text-sm text-gray-500">{d}</p></div>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* DEVELOPER */}
+      <section>
+        <h2 className="font-extrabold text-xl mb-3">ডেভেলপার</h2>
+        <Card className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <span className="w-16 h-16 shrink-0 rounded-full bg-gradient-to-br from-blood-500 to-blood-800 text-white text-2xl font-extrabold flex items-center justify-center">R</span>
+          <div className="flex-1">
+            <p className="font-extrabold text-lg">Rahat Islam</p>
+            <p className="text-sm text-gray-500">BloodLink ডিজাইন ও ডেভেলপমেন্ট — বাংলাদেশের জন্য ❤️</p>
+            <div className="flex gap-2 mt-2.5">
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-xs font-bold bg-gray-900 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition">GitHub</a>
+              {PORTFOLIO_URL !== '#' && <a href={PORTFOLIO_URL} target="_blank" rel="noreferrer" className="text-xs font-bold bg-blood-600 text-white rounded-lg px-4 py-2 hover:bg-blood-700 transition">Portfolio ↗</a>}
+            </div>
+          </div>
+        </Card>
+      </section>
 
       {/* CTA */}
       <div className="grid sm:grid-cols-2 gap-2">
