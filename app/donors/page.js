@@ -17,7 +17,7 @@ export default function Donors() {
     ensureSeed();
     let live = true;
     (async () => {
-      try { const rows = await fetchDonors({ availableOnly: false }); if (live) setAll(rows); }
+      try { const rows = await fetchDonors({ availableOnly: false, limit: 50 }); if (live) setAll(rows); }
       catch { if (live) setAll(store.getDonors()); }
     })();
     return () => { live = false; };

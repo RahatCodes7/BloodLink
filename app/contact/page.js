@@ -1,21 +1,13 @@
 'use client';
-import { useState } from 'react';
-import { Card, Input, Textarea, Button, Toast } from '@/components/ui';
+import Link from 'next/link';
+import { Card } from '@/components/ui';
 export default function Contact() {
-  const [t, setT] = useState('');
-  const [sending, setSending] = useState(false);
-  function send(e) {
-    e.preventDefault(); setSending(true);
-    setTimeout(() => { setSending(false); setT('✓ বার্তা পাঠানো হয়েছে। ধন্যবাদ!'); setTimeout(() => setT(''), 2000); e.target.reset(); }, 800);
-  }
   return (
     <div className="pt-4 max-w-xl mx-auto">
       <Card><h1 className="text-2xl font-extrabold">যোগাযোগ</h1>
-        <p className="text-sm text-gray-500 mb-3">মতামত বা সমস্যা জানান — আমরা দ্রুত উত্তর দেব।</p>
-        <form onSubmit={send}>
-          <Input label="নাম" required placeholder="আপনার নাম" /><Input label="ইমেইল" type="email" required placeholder="you@example.com" />
-          <Textarea label="বার্তা" required placeholder="লিখুন..." /><Button loading={sending}>{sending ? 'পাঠানো হচ্ছে...' : 'পাঠান'}</Button>
-        </form></Card><Toast msg={t} />
+        <p className="text-sm text-gray-500 mt-1 mb-3">সাধারণ প্রশ্নের উত্তর <Link href="/faq" className="text-blood-700 font-bold">FAQ-তে</Link> পাবেন। জরুরি রক্তের প্রয়োজনে সরাসরি <Link href="/search" className="text-blood-700 font-bold">রক্ত খুঁজুন</Link>।</p>
+        <p className="text-sm bg-yellow-50 border border-yellow-200 rounded-xl p-3">📢 যোগাযোগ ফর্ম শীঘ্রই আসছে। ততদিন FAQ দেখুন।</p>
+      </Card>
     </div>
   );
 }

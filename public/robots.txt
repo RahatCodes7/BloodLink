@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bloodlink-cf63.onrender.com/sitemap.xml
