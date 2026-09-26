@@ -17,6 +17,13 @@ export async function GET(req) {
       const rows = await repo.listByRequester(user.id);
       return ok(rows.map(r => ({ ...r, urgency: String(r.urgency || '').toLowerCase() })));
     }
+    if (searchParams.get('all') === '1') {
+      const user = await getUser(req);
+      const { requireRole, MOD_ROLES } = require('../../../services/validators');
+      requireRole(user, MOD_ROLES);
+      const rows = await repo.listAllForAdmin({ status: searchParams.get('status') || undefined });
+      return ok(rows.map(r => ({ ...r, urgency: String(r.urgency || '').toLowerCase(), hospital: r.hospital_name || r.location_text || '' })));
+    }
     const data = await repo.listActive({
       bloodGroup: searchParams.get('bloodGroup') || undefined,
       divisionId: searchParams.get('divisionId') || undefined,

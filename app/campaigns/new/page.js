@@ -14,7 +14,7 @@ export default function NewCampaign() {
   useEffect(() => { ensureSeed(); if (!store.getUser()) router.push('/login'); }, [router]);
   function say(m) { setToast(m); setTimeout(() => setToast(''), 2200); }
   const set = k => e => setF({ ...f, [k]: e.target.value });
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     if (f.title.trim().length < 5) return say('শিরোনাম কমপক্ষে ৫ অক্ষরের দিন।');
     if (f.organizer.trim().length < 3) return say('আয়োজকের নাম দিন।');
@@ -22,13 +22,27 @@ export default function NewCampaign() {
     if (new Date(f.date) < new Date(new Date().toDateString())) return say('তারিখ আজ বা ভবিষ্যতের হতে হবে।');
     if (!isValidBDPhone(f.phone)) return say('সঠিক ফোন নম্বর দিন।');
     setLoading(true);
-    setTimeout(() => {
-      store.addCampaign({ id: 'c' + Date.now(), title: f.title.trim(), organizer_name: f.organizer.trim(), description: f.desc.slice(0, 1000),
-        division_id: f.division, district_id: f.district, upazila_id: f.upazila, venue: f.venue.trim(),
-        event_date: f.date, start_time: f.start, end_time: f.end, contact_phone: f.phone.trim(), status: 'UPCOMING', created_at: new Date().toISOString() });
-      say('✓ ক্যাম্পেইন প্রকাশ হয়েছে!');
-      setTimeout(() => router.push('/campaigns'), 800);
-    }, 700);
+    const payload = {
+      title: f.title.trim(), organizer_name: f.organizer.trim(), description: f.desc.slice(0, 1000),
+      division_id: f.division || null, district_id: f.district || null, upazila_id: f.upazila || null,
+      venue: f.venue.trim(), event_date: f.date, start_time: f.start || null, end_time: f.end || null,
+      contact_phone: f.phone.trim()
+    };
+    let id = 'c' + Date.now();
+    try {
+      const r = await fetch('/api/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'প্রকাশ ব্যর্থ');
+      id = j.data.id;
+    } catch (err) {
+      if (!String(err.message).includes('Failed to fetch') && !String(err.message).includes('DATABASE_URL')) {
+        setLoading(false); say(err.message); return;
+      }
+      // local fallback (demo)
+    }
+    store.addCampaign({ id, ...payload, status: 'UPCOMING', created_at: new Date().toISOString() });
+    say('✓ ক্যাম্পেইন প্রকাশ হয়েছে!');
+    setTimeout(() => router.push('/campaigns'), 800);
   }
   return (
     <div className="pt-4 max-w-xl mx-auto">
