@@ -95,9 +95,9 @@ export default function Login() {
               </label>
               <Button loading={loading} className="!py-3.5 text-base">{loading ? 'প্রবেশ করছি...' : 'লগইন করুন'}</Button>
             </form>
-            <button className="btn-outline w-full mt-2.5 !py-3 inline-flex items-center justify-center gap-2" onClick={() => { ensureSeed(); store.setUser({ name: 'গুগল ব্যবহারকারী', email: 'user@gmail.com', phone: '01700000000', blood_group: 'O+' }); router.push('/dashboard'); }}>
+            <button type="button" className="btn-outline w-full mt-2.5 !py-3 inline-flex items-center justify-center gap-2 opacity-60" disabled title="শীঘ্রই আসছে">
               <span className="w-5 h-5 rounded-full bg-white border flex items-center justify-center font-extrabold text-sm bg-gradient-to-br from-blue-500 via-red-500 to-yellow-500 bg-clip-text text-transparent">G</span>
-              Google দিয়ে চালিয়ে যান
+              Google দিয়ে চালিয়ে যান <span className="text-[10px] bg-gray-100 rounded-full px-2 py-0.5">শীঘ্রই</span>
             </button>
             <div className="text-sm mt-4 flex justify-between">
               <Link href="/register" className="text-blood-700 font-bold hover:underline">নতুন অ্যাকাউন্ট খুলুন →</Link>

@@ -30,6 +30,29 @@ export async function GET(req) {
   }
 }
 
+// PATCH /api/donors/profile { availability?, last_donation_date?, donation_count? } — নিজেরটা
+export async function PATCH(req) {
+  try {
+    const user = await getUser(req);
+    if (!user) return fail(401, 'লগইন করুন।');
+    const body = await req.json();
+    if (body.availability && !['AVAILABLE', 'UNAVAILABLE', 'TEMPORARILY_UNAVAILABLE'].includes(body.availability)) {
+      return fail(400, 'অবস্থা সঠিক নয়।');
+    }
+    const donorsRepo = require('../../../../lib/db/repositories/donors');
+    const row = await donorsRepo.updateMine(user.id, {
+      availability: body.availability || null,
+      lastDonationDate: body.last_donation_date || null,
+      donationCount: body.donation_count ?? null
+    });
+    if (!row) return fail(404, 'ডোনার প্রোফাইল পাওয়া যায়নি।');
+    return NextResponse.json({ ok: true, data: { id: row.id } });
+  } catch (e) {
+    console.error('[api/donors/profile]', e.message);
+    return fail(e.status || 500, e.status ? e.message : 'আপডেট হয়নি।');
+  }
+}
+
 // POST /api/donors/profile — login required
 export async function POST(req) {
   try {

@@ -36,7 +36,17 @@ export default function DonorProfile() {
   }
   useEffect(() => { ensureSeed(); load(); }, []);
 
-  function save(patch, msg) {
+  async function save(patch, msg, apiPatch) {
+    // DB-তে পাঠান (ব্যর্থ হলে local):
+    if (apiPatch) {
+      try {
+        const r = await fetch('/api/donors/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(apiPatch) });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error);
+      } catch (e) {
+        if (!String(e.message || '').includes('Failed to fetch')) { setToast(e.message); setTimeout(() => setToast(''), 2200); return; }
+      }
+    }
     const all = store.getDonors().map(x => x.id === d.id ? { ...x, ...patch } : x);
     try { localStorage.setItem('bl_donors_v2', JSON.stringify(all)); } catch {}
     setD({ ...d, ...patch });
@@ -67,7 +77,7 @@ export default function DonorProfile() {
         <p className="text-sm text-gray-500 mt-1">📍 {disName(d.district_id)}</p>
         <div className="mt-2"><Badge tone={d.available ? 'green' : 'gray'}>{d.available ? '🟢 বর্তমানে উপলভ্য' : '⚪ বর্তমানে উপলভ্য নই'}</Badge></div>
         <p className="text-sm text-gray-600 mt-2">রক্তদান: {d.donations || 0} বার{d.last_donation ? ` • শেষ: ${fmtDate(d.last_donation)}` : ''}</p>
-        <button className="btn-outline mt-3 !w-auto !py-2 text-sm" onClick={() => save({ available: !d.available }, d.available ? 'আপনি এখন অনুপলভ্য।' : '✓ আপনি এখন উপলভ্য।')}>অবস্থা পরিবর্তন করুন</button>
+        <button className="btn-outline mt-3 !w-auto !py-2 text-sm" onClick={() => save({ available: !d.available }, d.available ? 'আপনি এখন অনুপলভ্য।' : '✓ আপনি এখন উপলভ্য।', { availability: d.available ? 'UNAVAILABLE' : 'AVAILABLE' })}>অবস্থা পরিবর্তন করুন</button>
       </Card>
 
       <Card className="mt-3">
@@ -81,8 +91,10 @@ export default function DonorProfile() {
           </div>
         </div>
         <Button disabled={!el.eligible} onClick={() => {
-          save({ last_donation: new Date().toISOString().slice(0, 10), donations: (d.donations || 0) + 1, available: false },
-            '✓ ধন্যবাদ! রেকর্ড হয়েছে। বিশ্রামের জন্য সাময়িক অনুপলভ্য রাখা হলো।');
+          const today = new Date().toISOString().slice(0, 10);
+          save({ last_donation: today, donations: (d.donations || 0) + 1, available: false },
+            '✓ ধন্যবাদ! রেকর্ড হয়েছে। বিশ্রামের জন্য সাময়িক অনুপলভ্য রাখা হলো।',
+            { last_donation_date: today, donation_count: (d.donations || 0) + 1, availability: 'UNAVAILABLE' });
           store.pushNotif({ title: '❤️ ধন্যবাদ!', message: 'আপনার রক্তদান রেকর্ড হয়েছে। পরবর্তী উপযুক্ত তারিখে জানিয়ে দেব।', ref: null });
         }} className="mt-3">
           {el.eligible ? 'আজ রক্ত দিয়েছি' : `${el.daysLeft} দিন পর দিতে পারবেন`}
